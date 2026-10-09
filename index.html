@@ -315,19 +315,99 @@ function startDrive(mcp){
   }, {refetchInterval: REFRESH_MS});
 }
 
-// Path B: published CSV fetched directly (works when this file is opened outside claude.ai)
-async function loadCsv(){
+// Path B: read the sheet over the web (works when this file is hosted on a website or opened from disk).
+// Sources, in order: 1) script-tag load from the sheet (no CORS involved)  2) sheet CSV via fetch  3) published-to-web CSV (Google refreshes it with a delay)
+function parseGvizRows(allRows){
+  // Columns are read by position: name, target, total stars, active, absence, absence %, OFD, OFD/Star, standard OFD, missing
+  const rows = allRows.filter(r=>r.some(c=>String(c).trim()!==''));
+  const hubs = []; let totals = null;
+  for(const r of rows){
+    const name = String(r[0]||'').trim();
+    if(!name || name.toLowerCase()==='hub name' || r.length<10) continue;
+    if(String(r[1]).trim()==='' || !isFinite(num(r[1]))) continue;
+    const active = num(r[3]), absence = num(r[4]);
+    const rec = {
+      hub:name, target:num(r[1]), stars:num(r[2]), active, absence,
+      absencePct: String(r[5]||'').trim() || (active? Math.round(absence/active*100)+'%' : '0%'),
+      ofd:num(r[6]), ofdPerStar:num(r[7]), stdOfd:num(r[8]), missing:num(r[9])
+    };
+    if(!totals && /^total/i.test(name)){ totals = {target:rec.target, stars:rec.stars, active:rec.active, absence:rec.absence, absencePct:rec.absencePct, ofd:rec.ofd, ofdPerStar:rec.ofdPerStar, stdOfd:rec.stdOfd, missing:rec.missing}; continue; }
+    hubs.push(rec);
+  }
+  if(!totals){
+    const sum = k=>hubs.reduce((a,h)=>a+h[k],0);
+    totals = {target:sum('target'), stars:sum('stars'), active:sum('active'), absence:sum('absence'),
+      absencePct:(sum('active')? Math.round(sum('absence')/sum('active')*100):0)+'%',
+      ofd:sum('ofd'), ofdPerStar:sum('stars')? Math.round(sum('ofd')/sum('stars')):0,
+      stdOfd:hubs.length? Math.round(sum('stdOfd')/hubs.length):0, missing:sum('missing')};
+  }
+  return {hubs, totals};
+}
+function parseGviz(text){ return parseGvizRows(parseCSV(text)); }
+
+const GVIZ_BASE = 'https://docs.google.com/spreadsheets/d/' + DRIVE_FILE_ID + '/gviz/tq?sheet=Sheet1';
+
+function loadJsonp(){
+  return new Promise((resolve, reject)=>{
+    const cb = '__gv' + Date.now() + Math.floor(Math.random()*1e6);
+    const s = document.createElement('script');
+    let done = false, timer = null;
+    const cleanup = ()=>{ done = true; clearTimeout(timer); try{ delete window[cb]; }catch(e){ window[cb] = undefined; } s.remove(); };
+    timer = setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('timeout')); } }, 15000);
+    window[cb] = (resp)=>{
+      if(done) return;
+      cleanup();
+      if(!resp || resp.status !== 'ok' || !resp.table){
+        const err = resp && resp.errors && resp.errors[0];
+        const msg = err ? String(err.reason||'') + ' ' + String(err.message||'') : 'bad response';
+        reject(new Error(/access|denied|permission|sign/i.test(msg) ? 'HTTP 403' : 'bad response: '+msg));
+        return;
+      }
+      const t = resp.table;
+      const rows = [ t.cols.map(c=>String(c.label||'')) ];
+      for(const r of (t.rows||[])){
+        rows.push((r.c||[]).map(cell=> cell ? (cell.f!=null ? String(cell.f) : (cell.v==null ? '' : String(cell.v))) : ''));
+      }
+      resolve({parsed: parseGvizRows(rows), raw: JSON.stringify(rows)});
+    };
+    s.onerror = ()=>{ if(!done){ cleanup(); reject(new Error('script blocked')); } };
+    s.src = GVIZ_BASE + '&tqx=out:json;responseHandler:' + cb + '&_=' + Date.now();
+    document.head.appendChild(s);
+  });
+}
+async function fetchText(url){
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return res.text();
+}
+const WEB_SOURCES = [
+  {load: loadJsonp},
+  {load: async()=>{ const text = await fetchText(GVIZ_BASE + '&tqx=out:csv&_=' + Date.now()); return {parsed: parseGviz(text), raw: text}; }},
+  {load: async()=>{ const text = await fetchText(SHEET_URL + '&_=' + Date.now()); return {parsed: parseSheet(text), raw: text}; }},
+  {load: async()=>{ const text = await fetchText(SHEET_URL); return {parsed: parseSheet(text), raw: text}; }},
+];
+let webSource = 0; // index of the source that worked last time
+function whyFailed(errs){
+  if(errs.some(e=>/^HTTP (401|403)/.test(e))) return 'sheet is not shared (set it to anyone with the link can view)';
+  if(errs.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'cannot reach docs.google.com from this page (network, firewall or site policy)';
+  return 'unexpected answer from Google';
+}
+async function loadWeb(){
   if(loading) return;
   loading = true;
   if(!isLive) setStatus('loading');
+  const errs = [];
   try{
-    const res = await fetch(SHEET_URL);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const text = await res.text();
-    acceptSheet(parseSheet(text), text);
-  }catch(e){
-    console.warn('Sheet refresh failed:', e);
-    setStatus(isLive ? 'stale' : 'offline', isLive ? '' : 'cannot reach the sheet');
+    const order = WEB_SOURCES.map((_,i)=>i).sort((a,b)=>(a===webSource?-1:b===webSource?1:a-b));
+    for(const i of order){
+      try{
+        const {parsed, raw} = await WEB_SOURCES[i].load();
+        acceptSheet(parsed, raw);
+        webSource = i;
+        return;
+      }catch(e){ errs.push(String(e && e.message || e)); console.warn('Source '+i+' failed:', e); }
+    }
+    setStatus(isLive ? 'stale' : 'offline', whyFailed(errs));
   }finally{
     loading = false;
   }
@@ -335,7 +415,7 @@ async function loadCsv(){
 
 document.getElementById('refreshBtn').addEventListener('click', ()=>{
   if(driveMcp){ setStatus('loading'); driveMcp.invalidate(DRIVE_SERVER, DRIVE_TOOL).catch(()=>{}); }
-  else if(!IN_CLAUDE){ loadCsv(); }
+  else if(!IN_CLAUDE){ loadWeb(); }
 });
 
 applyData(SNAPSHOT, SNAPSHOT_TOTALS);
@@ -346,9 +426,9 @@ applyData(SNAPSHOT, SNAPSHOT_TOTALS);
     if(mcp){ startDrive(mcp); }
     else { setStatus('offline', 'sign in to claude.ai to see live data'); }
   } else {
-    loadCsv();
-    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) loadCsv(); });
-    setInterval(()=>{ if(!document.hidden) loadCsv(); }, REFRESH_MS);
+    loadWeb();
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) loadWeb(); });
+    setInterval(()=>{ if(!document.hidden) loadWeb(); }, REFRESH_MS);
   }
 })();
 
