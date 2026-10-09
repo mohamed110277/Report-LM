@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hubs Performance</title>
+<style>
+:root{
+  --ink:#1c1f26; --sub:#68707d; --line:#e7e9ee; --bg:#f4f5f8; --card:#ffffff;
+  --blue:#2f5ee0; --green:#1a9c6b; --red:#d1394a; --orange:#e08a1f;
+  --track:#eef0f4;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif;}
+.wrap{max-width:1320px;margin:0 auto;padding:28px 20px 60px;}
+h1{font-size:22px;margin:0 0 4px;}
+.sub{color:var(--sub);font-size:13.5px;margin:0 0 22px;}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:28px;}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;border-inline-start:4px solid var(--c,#333);}
+.kpi .label{font-size:14px;color:var(--green);font-weight:700;}
+.kpi .val{font-size:24px;font-weight:700;margin-top:6px;}
+
+.sortbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 16px;}
+.sortbar .sl{font-size:13px;color:var(--sub);font-weight:600;}
+.sortbtn{border:1px solid var(--line);background:#fff;color:var(--sub);padding:8px 14px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;}
+.sortbtn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.dlbtn{border:none;background:var(--green);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.dlbtn:disabled{opacity:.5;cursor:not-allowed;}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+.hcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+.hcard .name{display:flex;align-items:center;gap:5px;font-weight:700;font-size:12px;color:var(--sub);}
+.hcard .name .pin{width:12px;height:12px;flex:none;}
+.hcard .big{font-size:28px;font-weight:800;margin:8px 0 0;}
+.hcard .capt{font-size:12.5px;color:var(--green);font-weight:700;}
+.bar{height:7px;background:var(--track);border-radius:6px;margin:10px 0 8px;overflow:hidden;}
+.bar > i{display:block;height:100%;border-radius:6px;}
+.pct-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:2px;}
+.pct-row b{font-size:15px;}
+.miss{color:var(--red);font-weight:700;}
+.miss.good{color:var(--green);}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.mini div{background:var(--track);border-radius:8px;padding:8px 10px;}
+.mini b{display:block;font-size:15px;}
+.mini span{font-size:11px;color:var(--sub);}
+
+.topright{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.status{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--sub);background:#fff;border:1px solid var(--line);padding:8px 12px;border-radius:20px;}
+.status .dot{width:9px;height:9px;border-radius:50%;background:#9aa1ad;}
+.status.live{color:var(--green);} .status.live .dot{background:var(--green);box-shadow:0 0 0 0 rgba(26,156,107,.5);animation:pulse 2s infinite;}
+.status.stale,.status.offline{color:var(--orange);} .status.stale .dot,.status.offline .dot{background:var(--orange);}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(26,156,107,.5);}70%{box-shadow:0 0 0 7px rgba(26,156,107,0);}100%{box-shadow:0 0 0 0 rgba(26,156,107,0);}}
+.refbtn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
+.refbtn:hover{background:var(--track);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1>Hubs Performance</h1>
+      <p class="sub" id="subtitle"></p>
+    </div>
+    <div class="topright">
+      <div class="status loading" id="status"><span class="dot"></span><span id="statusText">Updating…</span></div>
+      <button class="refbtn" id="refreshBtn">⟳ Refresh</button>
+      <button class="dlbtn" id="downloadBtn">⬇ Download image</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="sortbar">
+    <span class="sl">Sort hubs by:</span>
+    <button class="sortbtn active" data-sort="ofd">Highest OFD/Star</button>
+    <button class="sortbtn" data-sort="missing">Highest Missing</button>
+  </div>
+  <div class="cards" id="allCards"></div>
+</div>
+
+<script>
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT0iCFywbMwN5Q-un5uhCrQ0LLNsDHwCcdOjGwx6SxPAIJoSvk__PNWHbaChmKXKnAlIZgJa16QfB4z/pub?output=csv';
+const REFRESH_MS = 30000;
+
+// Saved snapshot of the sheet (shown only until the live sheet loads, or if it can't be reached)
+const SNAPSHOT = [{"hub": "Shorouk Hub", "target": 121, "stars": 91, "active": 75, "absence": 16, "absencePct": "18%", "ofd": 5306, "ofdPerStar": 71, "stdOfd": 50, "missing": 46}, {"hub": "October Hub", "target": 133, "stars": 101, "active": 88, "absence": 13, "absencePct": "13%", "ofd": 6019, "ofdPerStar": 68, "stdOfd": 52, "missing": 45}, {"hub": "New Cairo Hub", "target": 84, "stars": 65, "active": 60, "absence": 5, "absencePct": "8%", "ofd": 3776, "ofdPerStar": 63, "stdOfd": 50, "missing": 24}, {"hub": "Katamya-New Hub", "target": 99, "stars": 84, "active": 78, "absence": 6, "absencePct": "7%", "ofd": 4843, "ofdPerStar": 62, "stdOfd": 52, "missing": 21}, {"hub": "Marg Hub", "target": 97, "stars": 65, "active": 54, "absence": 11, "absencePct": "17%", "ofd": 3271, "ofdPerStar": 61, "stdOfd": 43, "missing": 43}, {"hub": "Huarghada Hub", "target": 66, "stars": 54, "active": 48, "absence": 6, "absencePct": "11%", "ofd": 2766, "ofdPerStar": 58, "stdOfd": 55, "missing": 18}, {"hub": "Madinaty Hub", "target": 122, "stars": 119, "active": 99, "absence": 20, "absencePct": "17%", "ofd": 5596, "ofdPerStar": 57, "stdOfd": 52, "missing": 23}, {"hub": "Suez Hub", "target": 42, "stars": 34, "active": 32, "absence": 2, "absencePct": "6%", "ofd": 1792, "ofdPerStar": 56, "stdOfd": 47, "missing": 10}, {"hub": "Hadayk October", "target": 126, "stars": 101, "active": 89, "absence": 12, "absencePct": "12%", "ofd": 4976, "ofdPerStar": 56, "stdOfd": 48, "missing": 37}, {"hub": "Hadayk El Ahram Hub", "target": 57, "stars": 60, "active": 49, "absence": 11, "absencePct": "18%", "ofd": 2737, "ofdPerStar": 56, "stdOfd": 52, "missing": 8}, {"hub": "Kafrelsheikh Hub", "target": 68, "stars": 60, "active": 58, "absence": 2, "absencePct": "3%", "ofd": 3157, "ofdPerStar": 54, "stdOfd": 47, "missing": 10}, {"hub": "03DSP-Elsadat Hub", "target": 33, "stars": 22, "active": 24, "absence": -2, "absencePct": "-9%", "ofd": 1187, "ofdPerStar": 54, "stdOfd": 48, "missing": 9}, {"hub": "Matrouh Hub", "target": 32, "stars": 23, "active": 22, "absence": 1, "absencePct": "4%", "ofd": 1184, "ofdPerStar": 54, "stdOfd": 45, "missing": 10}, {"hub": "Nasr City Hub", "target": 187, "stars": 162, "active": 149, "absence": 13, "absencePct": "8%", "ofd": 7905, "ofdPerStar": 53, "stdOfd": 50, "missing": 38}, {"hub": "Gesr Elsuez Hub", "target": 149, "stars": 124, "active": 106, "absence": 18, "absencePct": "15%", "ofd": 5599, "ofdPerStar": 53, "stdOfd": 50, "missing": 43}, {"hub": "Domiatta Hub", "target": 62, "stars": 61, "active": 58, "absence": 3, "absencePct": "5%", "ofd": 3062, "ofdPerStar": 53, "stdOfd": 52, "missing": 4}, {"hub": "Port Said Hub", "target": 40, "stars": 35, "active": 33, "absence": 2, "absencePct": "6%", "ofd": 1737, "ofdPerStar": 53, "stdOfd": 45, "missing": 7}, {"hub": "Maadi Hub", "target": 96, "stars": 85, "active": 79, "absence": 6, "absencePct": "7%", "ofd": 4118, "ofdPerStar": 52, "stdOfd": 45, "missing": 17}, {"hub": "Heliopolis Hub", "target": 120, "stars": 114, "active": 102, "absence": 12, "absencePct": "11%", "ofd": 5199, "ofdPerStar": 51, "stdOfd": 50, "missing": 18}, {"hub": "New October Hub", "target": 106, "stars": 96, "active": 87, "absence": 9, "absencePct": "9%", "ofd": 4416, "ofdPerStar": 51, "stdOfd": 47, "missing": 19}, {"hub": "Banha Hub", "target": 55, "stars": 48, "active": 53, "absence": -5, "absencePct": "-10%", "ofd": 2677, "ofdPerStar": 51, "stdOfd": 43, "missing": 2}, {"hub": "Assiut Hub", "target": 65, "stars": 61, "active": 56, "absence": 5, "absencePct": "8%", "ofd": 2803, "ofdPerStar": 50, "stdOfd": 45, "missing": 9}, {"hub": "Mokattam Hub", "target": 122, "stars": 107, "active": 101, "absence": 6, "absencePct": "6%", "ofd": 5046, "ofdPerStar": 50, "stdOfd": 49, "missing": 21}, {"hub": "Zahraa El Maadi Hub", "target": 53, "stars": 52, "active": 45, "absence": 7, "absencePct": "13%", "ofd": 2220, "ofdPerStar": 49, "stdOfd": 45, "missing": 8}, {"hub": "Zahraa Nasr City Hub", "target": 111, "stars": 94, "active": 85, "absence": 9, "absencePct": "10%", "ofd": 5226, "ofdPerStar": 49, "stdOfd": 52, "missing": 26}, {"hub": "El-Sharkia Hub", "target": 116, "stars": 96, "active": 88, "absence": 8, "absencePct": "8%", "ofd": 4270, "ofdPerStar": 49, "stdOfd": 42, "missing": 28}, {"hub": "Mohandseen Hub", "target": 91, "stars": 84, "active": 79, "absence": 5, "absencePct": "6%", "ofd": 3820, "ofdPerStar": 48, "stdOfd": 45, "missing": 12}, {"hub": "Mansoura-Talkha Hub", "target": 91, "stars": 82, "active": 70, "absence": 12, "absencePct": "15%", "ofd": 3245, "ofdPerStar": 46, "stdOfd": 45, "missing": 21}, {"hub": "Sharm EL Sheikh Hub", "target": 30, "stars": 29, "active": 20, "absence": 9, "absencePct": "31%", "ofd": 920, "ofdPerStar": 46, "stdOfd": 45, "missing": 10}, {"hub": "Haram Hub", "target": 126, "stars": 104, "active": 97, "absence": 7, "absencePct": "7%", "ofd": 4259, "ofdPerStar": 44, "stdOfd": 40, "missing": 29}, {"hub": "El Obour Hub", "target": 128, "stars": 140, "active": 113, "absence": 27, "absencePct": "19%", "ofd": 4951, "ofdPerStar": 44, "stdOfd": 47, "missing": 15}, {"hub": "Fayoum Hub", "target": 49, "stars": 46, "active": 46, "absence": 0, "absencePct": "0%", "ofd": 2006, "ofdPerStar": 44, "stdOfd": 43, "missing": 3}, {"hub": "Hawamdya Hub", "target": 58, "stars": 48, "active": 47, "absence": 1, "absencePct": "2%", "ofd": 2049, "ofdPerStar": 44, "stdOfd": 42, "missing": 11}, {"hub": "Behira Hub", "target": 76, "stars": 76, "active": 72, "absence": 4, "absencePct": "5%", "ofd": 3131, "ofdPerStar": 43, "stdOfd": 45, "missing": 4}, {"hub": "Ismailia Hub", "target": 66, "stars": 71, "active": 61, "absence": 10, "absencePct": "14%", "ofd": 2608, "ofdPerStar": 43, "stdOfd": 42, "missing": 5}, {"hub": "Beni Suef Hub", "target": 51, "stars": 55, "active": 47, "absence": 8, "absencePct": "15%", "ofd": 2008, "ofdPerStar": 43, "stdOfd": 43, "missing": 4}, {"hub": "Faisal Hub", "target": 96, "stars": 76, "active": 73, "absence": 3, "absencePct": "4%", "ofd": 3104, "ofdPerStar": 43, "stdOfd": 40, "missing": 23}, {"hub": "Minya Hub", "target": 73, "stars": 72, "active": 67, "absence": 5, "absencePct": "7%", "ofd": 2830, "ofdPerStar": 42, "stdOfd": 42, "missing": 6}, {"hub": "Tanta Hub", "target": 78, "stars": 71, "active": 70, "absence": 1, "absencePct": "1%", "ofd": 2944, "ofdPerStar": 42, "stdOfd": 45, "missing": 8}, {"hub": "New Valley Hub", "target": 10, "stars": 7, "active": 6, "absence": 1, "absencePct": "14%", "ofd": 251, "ofdPerStar": 42, "stdOfd": 50, "missing": 4}, {"hub": "Dikernis Hub", "target": 44, "stars": 36, "active": 34, "absence": 2, "absencePct": "6%", "ofd": 1400, "ofdPerStar": 41, "stdOfd": 42, "missing": 10}, {"hub": "Smouha Hub", "target": 107, "stars": 114, "active": 102, "absence": 12, "absencePct": "11%", "ofd": 4153, "ofdPerStar": 41, "stdOfd": 47, "missing": 5}, {"hub": "Khorshid Hub", "target": 114, "stars": 111, "active": 102, "absence": 9, "absencePct": "8%", "ofd": 4151, "ofdPerStar": 41, "stdOfd": 47, "missing": 12}, {"hub": "El-Mansoura Hub", "target": 92, "stars": 82, "active": 77, "absence": 5, "absencePct": "6%", "ofd": 3133, "ofdPerStar": 41, "stdOfd": 44, "missing": 15}, {"hub": "ElMahala Hub", "target": 82, "stars": 75, "active": 73, "absence": 2, "absencePct": "3%", "ofd": 2960, "ofdPerStar": 41, "stdOfd": 45, "missing": 9}, {"hub": "Alexandria Hub", "target": 106, "stars": 111, "active": 104, "absence": 7, "absencePct": "6%", "ofd": 4192, "ofdPerStar": 40, "stdOfd": 47, "missing": 2}, {"hub": "ElAgamy Hub", "target": 96, "stars": 97, "active": 90, "absence": 7, "absencePct": "7%", "ofd": 3595, "ofdPerStar": 40, "stdOfd": 45, "missing": 6}, {"hub": "Monufia Hub", "target": 107, "stars": 99, "active": 87, "absence": 12, "absencePct": "12%", "ofd": 3390, "ofdPerStar": 39, "stdOfd": 40, "missing": 20}, {"hub": "Helwan Hub", "target": 88, "stars": 80, "active": 75, "absence": 5, "absencePct": "6%", "ofd": 2904, "ofdPerStar": 39, "stdOfd": 42, "missing": 13}, {"hub": "Imbaba Hub", "target": 137, "stars": 125, "active": 112, "absence": 13, "absencePct": "10%", "ofd": 4225, "ofdPerStar": 38, "stdOfd": 40, "missing": 25}, {"hub": "Shobra Hub", "target": 122, "stars": 115, "active": 104, "absence": 11, "absencePct": "10%", "ofd": 3866, "ofdPerStar": 37, "stdOfd": 40, "missing": 18}, {"hub": "Qalyoub Hub", "target": 46, "stars": 48, "active": 43, "absence": 5, "absencePct": "10%", "ofd": 1510, "ofdPerStar": 35, "stdOfd": 40, "missing": 3}, {"hub": "Faqous Hub", "target": 48, "stars": 45, "active": 45, "absence": 0, "absencePct": "0%", "ofd": 1549, "ofdPerStar": 34, "stdOfd": 39, "missing": 3}, {"hub": "Downtown Hub", "target": 87, "stars": 90, "active": 85, "absence": 5, "absencePct": "6%", "ofd": 2728, "ofdPerStar": 32, "stdOfd": 38, "missing": 2}, {"hub": "Aswan Hub", "target": 51, "stars": 39, "active": 32, "absence": 7, "absencePct": "18%", "ofd": 1022, "ofdPerStar": 32, "stdOfd": 50, "missing": 19}, {"hub": "Sohag Hub", "target": 80, "stars": 78, "active": 69, "absence": 9, "absencePct": "12%", "ofd": 1937, "ofdPerStar": 28, "stdOfd": 38, "missing": 11}, {"hub": "Luxor Hub", "target": 43, "stars": 45, "active": 30, "absence": 15, "absencePct": "33%", "ofd": 771, "ofdPerStar": 26, "stdOfd": 44, "missing": 13}, {"hub": "Qena Hub", "target": 75, "stars": 63, "active": 54, "absence": 9, "absencePct": "14%", "ofd": 1342, "ofdPerStar": 25, "stdOfd": 47, "missing": 21}, {"hub": "Edfo Hub", "target": 18, "stars": 17, "active": 14, "absence": 3, "absencePct": "18%", "ofd": 279, "ofdPerStar": 20, "stdOfd": 47, "missing": 4}];
+const SNAPSHOT_TOTALS = {target:4928, stars:4445, active:4018, absence:427, absencePct:'10%', ofd:188121, ofdPerStar:48, stdOfd:42, missing:912};
+
+function fmt(n){return Number(n).toLocaleString('en-US');}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+let D = [];
+let TOTALS = SNAPSHOT_TOTALS;
+let kpis = [];
+let ofdMin = 0, ofdMax = 1;
+let isLive = false, lastUpdate = null, lastRaw = null, loading = false, blocked = false;
+// Inside claude.ai the page runs in a sandbox whose network is blocked; a downloaded .html file is not sandboxed.
+const IN_CLAUDE = (typeof claude !== 'undefined') && !!claude.use;
+
+// ---- CSV parsing (handles quotes, commas inside quotes, CRLF) ----
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){
+      if(ch==='"'){ if(text[i+1]==='"'){cell+='"'; i++;} else q=false; }
+      else cell+=ch;
+    } else if(ch==='"'){ q=true; }
+    else if(ch===','){ row.push(cell); cell=''; }
+    else if(ch==='\n'||ch==='\r'){
+      if(ch==='\r' && text[i+1]==='\n') i++;
+      row.push(cell); cell=''; rows.push(row); row=[];
+    } else cell+=ch;
+  }
+  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+function num(v){ const n=Number(String(v==null?'':v).replace(/[,\s%]/g,'')); return n; }
+
+function parseMarkdownTable(md){
+  const rows=[];
+  for(const raw of String(md).split('\n')){
+    const l=raw.trim();
+    if(!l.startsWith('|')) continue;
+    if(/^\|\s*:?-{2,}/.test(l)) continue; // separator row
+    const cells=l.replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim().replace(/\\(.)/g,'$1'));
+    rows.push(cells);
+  }
+  return rows;
+}
+function parseSheet(text){ return rowsToSheet(parseCSV(text)); }
+function rowsToSheet(allRows){
+  const rows = allRows.filter(r=>r.some(c=>String(c).trim()!==''));
+  const hi = rows.findIndex(r=>String(r[0]).trim().toLowerCase()==='hub name');
+  if(hi<0) throw new Error('header row not found');
+  const head = rows[hi].map(h=>String(h).trim().toLowerCase());
+  const col = (...names)=>{ for(const n of names){ const i=head.indexOf(n); if(i>=0) return i; } return -1; };
+  const ix = {
+    target:col('target'), stars:col('total stars'), active:col('active star','active stars'),
+    absence:col('absence'), absencePct:col('absence %'), ofd:col('ofd'),
+    ofdPerStar:col('ofd/star'), stdOfd:col('standerd ofd','standard ofd'), missing:col('missing of target')
+  };
+  for(const k in ix){ if(ix[k]<0) throw new Error('missing column: '+k); }
+
+  const hubs = [];
+  for(const r of rows.slice(hi+1)){
+    const name = String(r[0]||'').trim();
+    const target = num(r[ix.target]);
+    if(!name || !isFinite(target) || String(r[ix.target]).trim()==='') continue;
+    const active = num(r[ix.active]);
+    const stars = num(r[ix.stars]);
+    const absence = num(r[ix.absence]);
+    hubs.push({
+      hub:name, target, stars, active, absence,
+      absencePct: String(r[ix.absencePct]||'').trim() || (active? Math.round(absence/active*100)+'%' : '0%'),
+      ofd:num(r[ix.ofd]), ofdPerStar:num(r[ix.ofdPerStar]),
+      stdOfd:num(r[ix.stdOfd]), missing:num(r[ix.missing])
+    });
+  }
+  let totals;
+  const tr = hi>0 ? rows[hi-1] : null;
+  if(tr && isFinite(num(tr[ix.target])) && String(tr[ix.target]).trim()!==''){
+    totals = {
+      target:num(tr[ix.target]), stars:num(tr[ix.stars]), active:num(tr[ix.active]),
+      absence:num(tr[ix.absence]), absencePct:String(tr[ix.absencePct]||'').trim(),
+      ofd:num(tr[ix.ofd]), ofdPerStar:num(tr[ix.ofdPerStar]),
+      stdOfd:num(tr[ix.stdOfd]), missing:num(tr[ix.missing])
+    };
+  } else {
+    const sum = k=>hubs.reduce((a,h)=>a+h[k],0);
+    totals = {target:sum('target'), stars:sum('stars'), active:sum('active'), absence:sum('absence'),
+      absencePct:(sum('active')? Math.round(sum('absence')/sum('active')*100):0)+'%',
+      ofd:sum('ofd'), ofdPerStar:sum('stars')? Math.round(sum('ofd')/sum('stars')):0,
+      stdOfd:hubs.length? Math.round(sum('stdOfd')/hubs.length):0, missing:sum('missing')};
+  }
+  return {hubs, totals};
+}
+
+// ---- Render ----
+function ofdColor(val){
+  const t = (val-ofdMin)/((ofdMax-ofdMin)||1);
+  const hue = (1-t)*120; // highest value -> red (0), lowest value -> green (120)
+  return {bg:`hsl(${hue},70%,90%)`, fg:`hsl(${hue},65%,28%)`};
+}
+
+function hcard(d){
+  const missing = d.target - d.active;
+  const activePct = d.target? Math.round(d.active/d.target*1000)/10 : 0;
+  const barWidth = Math.min(Math.max(activePct,0),100);
+  const barColor = activePct>=80?'var(--green)':activePct>=50?'var(--orange)':'var(--red)';
+  const missClass = missing<=0?'good':'';
+  const c = ofdColor(d.ofdPerStar);
+  return `<div class="hcard">
+    <div class="name"><svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(d.hub)}</div>
+    <div class="big">${fmt(d.active)}</div>
+    <div class="capt">Active stars</div>
+    <div class="pct-row"><b>Target ${fmt(d.target)}</b><span class="miss ${missClass}">${missing>0? '-'+fmt(missing)+' missing':'Target exceeded'}</span></div>
+    <div class="bar"><i style="width:${barWidth}%;background:${barColor}"></i></div>
+    <div class="mini">
+      <div><b>${fmt(d.stars)}</b><span>Total stars</span></div>
+      <div><b>${fmt(d.ofd)}</b><span>OFD</span></div>
+      <div><b>${fmt(d.absence)}</b><span>Absence &bull; ${esc(d.absencePct)}</span></div>
+      <div style="background:${c.bg};color:${c.fg}"><b style="color:${c.fg}">${fmt(d.ofdPerStar)}</b><span style="color:${c.fg}">OFD/Star</span></div>
+    </div>
+  </div>`;
+}
+
+let sortMode = 'ofd';
+let currentSorted = [];
+function renderCards(){
+  let arr = [...D];
+  if(sortMode==='ofd') arr.sort((a,b)=>b.ofdPerStar-a.ofdPerStar);
+  else arr.sort((a,b)=>(b.target-b.active)-(a.target-a.active));
+  currentSorted = arr;
+  document.getElementById('allCards').innerHTML = arr.map(hcard).join('');
+}
+document.querySelectorAll('.sortbtn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.sortbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  sortMode = btn.dataset.sort;
+  renderCards();
+}));
+
+function renderSubtitle(){
+  const overallPct = TOTALS.target? Math.round(TOTALS.stars/TOTALS.target*1000)/10 : 0;
+  const stamp = isLive && lastUpdate
+    ? 'Updated '+lastUpdate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+    : 'Saved snapshot';
+  document.getElementById('subtitle').textContent = `${D.length} hubs • Overall achievement ${overallPct}% • ${stamp}`;
+}
+
+function applyData(hubs, totals){
+  D = hubs.map(d=>({...d, pct: d.target? Math.round(d.stars/d.target*1000)/10 : 0}));
+  TOTALS = totals;
+  ofdMin = Math.min(...D.map(d=>d.ofdPerStar));
+  ofdMax = Math.max(...D.map(d=>d.ofdPerStar));
+  kpis = [
+    {label:'Target', val:fmt(TOTALS.target), c:'#2f5ee0'},
+    {label:'Total stars', val:fmt(TOTALS.stars), c:'#333333'},
+    {label:'Active Star', val:fmt(TOTALS.active), c:'#2f5ee0'},
+    {label:'absence', val:fmt(TOTALS.absence), c:'#e08a1f'},
+    {label:'absence %', val:TOTALS.absencePct, c:'#e08a1f'},
+    {label:'OFD', val:fmt(TOTALS.ofd), c:'#1a9c6b'},
+    {label:'OFD/Star', val:fmt(TOTALS.ofdPerStar), c:'#d1394a'},
+    {label:'Standerd OFD', val:fmt(TOTALS.stdOfd), c:'#333333'},
+    {label:'Missing of target', val:fmt(TOTALS.missing), c:'#d1394a'},
+  ];
+  document.getElementById('kpis').innerHTML = kpis.map(k=>`
+    <div class="kpi" style="--c:${k.c}">
+      <div class="label">${esc(k.label)}</div>
+      <div class="val">${esc(k.val)}</div>
+    </div>`).join('');
+  renderCards();
+  renderSubtitle();
+}
+
+// ---- Live link to the Google Sheet ----
+// Inside claude.ai (network blocked) the page reads the sheet through the viewer's Google Drive connector.
+// Opened as a plain .html file, it reads the published CSV directly instead.
+const DRIVE_SERVER = 'Google Drive';
+const DRIVE_TOOL = 'read_file_content';
+const DRIVE_FILE_ID = '1U43Cqa-S362A0QTHigdliVJixmmBICX6zOFM3Z4u_aM';
+let driveMcp = null;
+
+function setStatus(state, detail){
+  const el = document.getElementById('status');
+  const txt = document.getElementById('statusText');
+  el.className = 'status ' + state;
+  const base = state==='live' ? 'Live' : state==='loading' ? 'Updating\u2026' : state==='stale' ? 'Connection lost \u2013 showing last data' : 'Saved data';
+  txt.textContent = detail ? base + ' \u2013 ' + detail : base;
+}
+function extractText(p){
+  if(p && typeof p==='object'){ return typeof p.fileContent==='string' ? p.fileContent : JSON.stringify(p); }
+  if(typeof p==='string'){
+    try{ const j=JSON.parse(p); if(j && typeof j.fileContent==='string') return j.fileContent; }catch(e){}
+    return p;
+  }
+  return '';
+}
+function acceptSheet(parsed, raw, when){
+  if(!parsed.hubs.length) throw new Error('no hub rows');
+  if(raw !== lastRaw){ applyData(parsed.hubs, parsed.totals); lastRaw = raw; }
+  isLive = true; lastUpdate = when || new Date();
+  renderSubtitle();
+  setStatus('live');
+}
+
+// Path A: Google Drive connector (works inside claude.ai)
+function startDrive(mcp){
+  driveMcp = mcp;
+  setStatus('loading');
+  mcp.watchTool(DRIVE_SERVER, DRIVE_TOOL, {fileId: DRIVE_FILE_ID}, ev=>{
+    if(ev.type === 'data'){
+      try{
+        const text = extractText(ev.result.payload);
+        const parsed = rowsToSheet(parseMarkdownTable(text));
+        acceptSheet(parsed, text, ev.result.cache ? new Date(ev.result.cache.storedAt) : new Date());
+      }catch(e){
+        console.warn('Could not read the sheet:', e);
+        setStatus(isLive ? 'stale' : 'offline', 'could not read the sheet');
+      }
+    } else {
+      const code = ev.error && ev.error.code;
+      console.warn('Google Drive read failed:', ev.error);
+      if(['not_granted','server_not_connected','needs_reauth','approval_required','blocked_by_policy'].includes(code)){
+        setStatus('offline', 'allow Google Drive access to see live data');
+      } else {
+        setStatus(isLive ? 'stale' : 'offline');
+      }
+    }
+  }, {refetchInterval: REFRESH_MS});
+}
+
+// Path B: published CSV fetched directly (works when this file is opened outside claude.ai)
+async function loadCsv(){
+  if(loading) return;
+  loading = true;
+  if(!isLive) setStatus('loading');
+  try{
+    const res = await fetch(SHEET_URL);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    acceptSheet(parseSheet(text), text);
+  }catch(e){
+    console.warn('Sheet refresh failed:', e);
+    setStatus(isLive ? 'stale' : 'offline', isLive ? '' : 'cannot reach the sheet');
+  }finally{
+    loading = false;
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  if(driveMcp){ setStatus('loading'); driveMcp.invalidate(DRIVE_SERVER, DRIVE_TOOL).catch(()=>{}); }
+  else if(!IN_CLAUDE){ loadCsv(); }
+});
+
+applyData(SNAPSHOT, SNAPSHOT_TOTALS);
+(async()=>{
+  if(IN_CLAUDE){
+    let mcp = null;
+    try{ mcp = await claude.use('mcp'); }catch(e){}
+    if(mcp){ startDrive(mcp); }
+    else { setStatus('offline', 'sign in to claude.ai to see live data'); }
+  } else {
+    loadCsv();
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) loadCsv(); });
+    setInterval(()=>{ if(!document.hidden) loadCsv(); }, REFRESH_MS);
+  }
+})();
+
+// ---- Build a PNG snapshot of the dashboard entirely with Canvas (no external libs) ----
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function fitText(ctx,text,maxWidth){
+  if(ctx.measureText(text).width<=maxWidth) return text;
+  let t=text;
+  while(t.length>1 && ctx.measureText(t+'\u2026').width>maxWidth){ t=t.slice(0,-1); }
+  return t+'\u2026';
+}
+function drawPinIcon(ctx,cx,cy,r,color){
+  ctx.save();
+  ctx.strokeStyle=color; ctx.lineWidth=Math.max(1.2,r*0.22); ctx.lineJoin='round'; ctx.lineCap='round';
+  const gap=44*Math.PI/180;
+  const a1=Math.PI/2+gap/2, a2=Math.PI/2-gap/2;
+  const p1={x:cx+r*Math.cos(a1),y:cy+r*Math.sin(a1)};
+  const p2={x:cx+r*Math.cos(a2),y:cy+r*Math.sin(a2)};
+  const tip={x:cx,y:cy+r*2.15};
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,a1,a2,false);
+  ctx.lineTo(tip.x,tip.y);
+  ctx.lineTo(p2.x,p2.y);
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,r*0.36,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+function drawCard(ctx,d,x,y,w,h){
+  ctx.fillStyle='#ffffff'; roundRect(ctx,x,y,w,h,10); ctx.fill();
+  ctx.strokeStyle='#e7e9ee'; ctx.lineWidth=1; roundRect(ctx,x,y,w,h,10); ctx.stroke();
+  let px=x+18, py=y+30;
+  ctx.textAlign='left'; ctx.fillStyle='#68707d'; ctx.font='700 14px Segoe UI, Arial';
+  drawPinIcon(ctx, px+6, py-9, 6, '#68707d');
+  ctx.fillText(fitText(ctx,d.hub, w-58), px+18, py);
+  py+=40; ctx.fillStyle='#1c1f26'; ctx.font='800 32px Segoe UI, Arial';
+  ctx.fillText(fmt(d.active), px, py);
+  py+=22; ctx.fillStyle='#1a9c6b'; ctx.font='700 15px Segoe UI, Arial';
+  ctx.fillText('Active stars', px, py);
+  py+=26;
+  const missing = d.target-d.active;
+  ctx.fillStyle='#1c1f26'; ctx.font='700 15px Segoe UI, Arial';
+  ctx.fillText('Target '+fmt(d.target), px, py);
+  ctx.textAlign='right'; ctx.fillStyle = missing>0? '#d1394a':'#1a9c6b';
+  ctx.font='700 14px Segoe UI, Arial';
+  ctx.fillText(missing>0? '-'+fmt(missing)+' missing':'Target exceeded', x+w-18, py);
+  ctx.textAlign='left';
+  const barY=py+12, barW=w-36;
+  ctx.fillStyle='#eef0f4'; roundRect(ctx,px,barY,barW,8,4); ctx.fill();
+  const pct=Math.max(0,Math.min(1,d.active/d.target));
+  ctx.fillStyle = pct>=0.8?'#1a9c6b':pct>=0.5?'#e08a1f':'#d1394a';
+  if(pct>0){ roundRect(ctx,px,barY,Math.max(barW*pct,8),8,4); ctx.fill(); }
+  py=barY+34;
+  const miniW=(w-36-10)/2, miniH=52;
+  const oc = ofdColor(d.ofdPerStar);
+  const mini=[
+    {v:fmt(d.stars), l:'Total stars', bg:'#eef0f4', fg:'#1c1f26'},
+    {v:fmt(d.ofd), l:'OFD', bg:'#eef0f4', fg:'#1c1f26'},
+    {v:fmt(d.absence), l:'Absence \u2022 '+d.absencePct, bg:'#eef0f4', fg:'#1c1f26'},
+    {v:fmt(d.ofdPerStar), l:'OFD/Star', bg:oc.bg, fg:oc.fg},
+  ];
+  mini.forEach((m,i)=>{
+    const mx=px+(i%2)*(miniW+10), my=py+Math.floor(i/2)*(miniH+10);
+    ctx.fillStyle=m.bg; roundRect(ctx,mx,my,miniW,miniH,8); ctx.fill();
+    ctx.fillStyle=m.fg; ctx.font='700 16px Segoe UI, Arial';
+    ctx.fillText(fitText(ctx,m.v,miniW-20), mx+11, my+23);
+    ctx.font='400 12px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m.l,miniW-20), mx+11, my+40);
+  });
+}
+async function buildImageBlob(){
+  const scale=4, cols=8, cardW=280, cardH=304, gap=18, pad=32, headerH=250;
+  const list = currentSorted.length ? currentSorted : D;
+  const rows = Math.ceil(list.length/cols);
+  const width = pad*2 + cols*cardW + (cols-1)*gap;
+  const height = headerH + pad + rows*(cardH+gap);
+  const canvas = document.createElement('canvas');
+  canvas.width = width*scale; canvas.height = height*scale;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale,scale);
+  ctx.fillStyle='#f4f5f8'; ctx.fillRect(0,0,width,height);
+  ctx.fillStyle='#1c1f26'; ctx.font='700 23px Segoe UI, Arial';
+  ctx.fillText('Hubs Performance', pad, 38);
+  ctx.fillStyle='#68707d'; ctx.font='400 13px Segoe UI, Arial';
+  ctx.fillText(document.getElementById('subtitle').textContent, pad, 58);
+  const kW=(width-pad*2-(kpis.length-1)*10)/kpis.length;
+  const kpiH=100;
+  kpis.forEach((k,i)=>{
+    const x=pad+i*(kW+10), y=74;
+    ctx.fillStyle='#ffffff'; roundRect(ctx,x,y,kW,kpiH,10); ctx.fill();
+    ctx.strokeStyle='#e7e9ee'; roundRect(ctx,x,y,kW,kpiH,10); ctx.stroke();
+    ctx.fillStyle=k.c; ctx.fillRect(x,y,5,kpiH);
+    ctx.textAlign='left';
+    ctx.fillStyle='#1a9c6b'; ctx.font='800 20px Segoe UI, Arial';
+    ctx.fillText(fitText(ctx,k.label,kW-24), x+16, y+36);
+    ctx.fillStyle='#1c1f26'; ctx.font='700 30px Segoe UI, Arial';
+    ctx.fillText(k.val, x+16, y+78);
+  });
+  list.forEach((d,i)=>{
+    const col=i%cols, row=Math.floor(i/cols);
+    drawCard(ctx, d, pad+col*(cardW+gap), headerH+row*(cardH+gap), cardW, cardH);
+  });
+  return await new Promise(res=>canvas.toBlob(res,'image/png'));
+}
+
+document.getElementById('downloadBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('downloadBtn');
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Preparing...';
+  try{
+    const blob = await buildImageBlob();
+    let saved = false;
+    // Try the claude.ai artifact download capability first (works on the published claude.ai link)
+    try{
+      if(typeof claude !== 'undefined' && claude.use){
+        const downloads = await claude.use('downloads');
+        if(downloads){
+          btn.textContent = 'Saving...';
+          await downloads.save({filename:'hubs-dashboard.png', data: blob});
+          saved = true;
+        }
+      }
+    }catch(e){ /* fall through to plain browser download below */ }
+    // Fallback: plain browser download (works when this file is opened directly, no claude runtime)
+    if(!saved){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'hubs-dashboard.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    }
+  }catch(e){
+    console.error(e);
+    alert('Could not generate the image. Please try again.');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+});
+</script>
+</body>
+</html>
