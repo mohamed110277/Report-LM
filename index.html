@@ -900,7 +900,18 @@ async function loadTabFetch(name){
   if(i<0||j<i) throw new Error('bad response');
   return respToRows(JSON.parse(t.slice(i,j+1)));
 }
-async function loadTab(name){ try{ return await loadTabFetch(name); }catch(e1){ try{ return await loadTabJsonp(name); }catch(e2){ throw e1; } } }
+// CSV keeps every cell (text headers included); the JSON format drops text cells that sit in number columns
+async function loadTabCsv(name){
+  const res=await fetch(gvizUrl(name,'out:csv'),{cache:'no-store',credentials:'omit'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const t=await res.text();
+  if(/^\s*</.test(t)) throw new Error('HTTP 403');   // Google sent an HTML sign-in page
+  return csvDates(parseCSV(t));
+}
+async function loadTab(name){
+  try{ return await loadTabCsv(name); }
+  catch(e0){ try{ return await loadTabFetch(name); }catch(e1){ try{ return await loadTabJsonp(name); }catch(e2){ throw e1; } } }
+}
 function loadTabJsonp(name){
   return new Promise((resolve,reject)=>{
     const cb='__gv'+Date.now()+Math.floor(Math.random()*1e6), s=document.createElement('script'); let done=false,timer=null;
@@ -928,7 +939,17 @@ function whyFailed(es){
   if(es.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'could not reach Google (no internet, or the page is opened inside a network that blocks it)';
   return 'unexpected answer from Google';
 }
-function csvDates(rows){ return rows.map(r=>r.map(c=>{ if(typeof c!=='string') return c; const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(c.trim()); return m? m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0') : c; })); }
+function csvDates(rows){
+  const MI={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  const p2=n=>String(n).padStart(2,'0');
+  return rows.map(r=>r.map(c=>{
+    if(typeof c!=='string') return c; const s=c.trim(); let m;
+    if((m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s))) return m[3]+'-'+p2(m[1])+'-'+p2(m[2]);        // M/D/YYYY
+    if((m=/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/.exec(s))) return m[1]+'-'+p2(m[2])+'-'+p2(m[3]);        // YYYY/M/D
+    if((m=/^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s))) return m[1]+'-'+p2(m[2])+'-'+p2(m[3]);          // YYYY-M-D
+    if((m=/^(\d{1,2})[ -]([A-Za-z]{3})[a-z]*[ -,]*(\d{4})$/.exec(s)) && MI[m[2].toLowerCase()]) return m[3]+'-'+p2(MI[m[2].toLowerCase()])+'-'+p2(m[1]);  // 1-Oct-2026
+    if((m=/^([A-Za-z]{3})[a-z]* (\d{1,2}),? (\d{4})$/.exec(s)) && MI[m[1].toLowerCase()]) return m[3]+'-'+p2(MI[m[1].toLowerCase()])+'-'+p2(m[2]);        // Oct 1, 2026
+    return c; })); }
 async function loadPubXlsx(){
   const res=await fetch(SHEET_URL.split('?')[0]+'?output=xlsx&_='+Date.now(),{cache:'no-store'});
   if(!res.ok) throw new Error('HTTP '+res.status);
@@ -949,7 +970,12 @@ async function loadWeb(){
     // 2) the published link as xlsx: exact cell values for every tab (Google may delay a few minutes)
     try{ const x=await loadPubXlsx(); if(validWorkbook(x)){ lastSrc='published link'; acceptWorkbook(x,'published link (may lag a few minutes)'); return; } es.push('published xlsx incomplete'); }
     catch(e){ es.push(String(e&&e.message||e)); }
-    if(ok){ const part={}; names.forEach(n=>{ if(wb[n]) part[n]=wb[n]; }); lastSrc='sheet (partial)'; acceptWorkbook(part,ok+' of '+names.length+' tabs'); return; }
+    if(ok){
+      // keep only the tabs that are readable; never overwrite good data with a broken tab
+      const part={}; let good=0;
+      PAGES.forEach((p,i)=>{ const rows=wb[p.sheet]; if(!rows) return; try{ PARSERS[p.key](rows); part[p.sheet]=rows; good++; }catch(e){ es.push('tab "'+p.sheet+'": '+e.message); } });
+      if(good){ lastSrc='sheet (partial)'; acceptWorkbook(part,good+' of '+names.length+' tabs'); return; }
+    }
     // 3) last resort: the CSV link (first tab only)
     try{
       const text=await fetchText(SHEET_URL+'&_='+Date.now());
