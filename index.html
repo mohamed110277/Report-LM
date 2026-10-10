@@ -908,9 +908,25 @@ async function loadTabCsv(name){
   if(/^\s*</.test(t)) throw new Error('HTTP 403');   // Google sent an HTML sign-in page
   return csvDates(parseCSV(t));
 }
+async function loadTabJson(name){ try{ return await loadTabFetch(name); }catch(e1){ try{ return await loadTabJsonp(name); }catch(e2){ throw e1; } } }
+// JSON has exact numbers/dates but drops some text cells; CSV has the text. Take JSON and fill its empty cells from CSV.
+function mergeRows(jr,cr){
+  const n=Math.max(jr.length,cr.length), out=[];
+  for(let i=0;i<n;i++){
+    const a=jr[i]||[], b=cr[i]||[], w=Math.max(a.length,b.length), row=[];
+    for(let j=0;j<w;j++){ const v=a[j]; row.push((v==null||v==='') && b[j]!=null ? b[j] : (v==null?null:v)); }
+    while(row.length&&row[row.length-1]==null) row.pop();
+    out.push(row);
+  }
+  while(out.length&&!out[out.length-1].length) out.pop();
+  return out;
+}
 async function loadTab(name){
-  try{ return await loadTabCsv(name); }
-  catch(e0){ try{ return await loadTabFetch(name); }catch(e1){ try{ return await loadTabJsonp(name); }catch(e2){ throw e1; } } }
+  const [c,j]=await Promise.allSettled([loadTabCsv(name),loadTabJson(name)]);
+  const cv=c.status==='fulfilled'?c.value:null, jv=j.status==='fulfilled'?j.value:null;
+  if(cv&&jv) return mergeRows(jv,cv);
+  if(jv) return jv; if(cv) return cv;
+  throw (c.reason||j.reason);
 }
 function loadTabJsonp(name){
   return new Promise((resolve,reject)=>{
@@ -949,6 +965,9 @@ function csvDates(rows){
     if((m=/^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s))) return m[1]+'-'+p2(m[2])+'-'+p2(m[3]);          // YYYY-M-D
     if((m=/^(\d{1,2})[ -]([A-Za-z]{3})[a-z]*[ -,]*(\d{4})$/.exec(s)) && MI[m[2].toLowerCase()]) return m[3]+'-'+p2(MI[m[2].toLowerCase()])+'-'+p2(m[1]);  // 1-Oct-2026
     if((m=/^([A-Za-z]{3})[a-z]* (\d{1,2}),? (\d{4})$/.exec(s)) && MI[m[1].toLowerCase()]) return m[3]+'-'+p2(MI[m[1].toLowerCase()])+'-'+p2(m[2]);        // Oct 1, 2026
+    const yr=new Date().getFullYear();
+    if((m=/^(\d{1,2})[ -]([A-Za-z]{3})[a-z]*$/.exec(s)) && MI[m[2].toLowerCase()]) return yr+'-'+p2(MI[m[2].toLowerCase()])+'-'+p2(m[1]);   // 1-Oct
+    if((m=/^([A-Za-z]{3})[a-z]* (\d{1,2})$/.exec(s)) && MI[m[1].toLowerCase()]) return yr+'-'+p2(MI[m[1].toLowerCase()])+'-'+p2(m[2]);         // Oct 1
     return c; })); }
 async function loadPubXlsx(){
   const res=await fetch(SHEET_URL.split('?')[0]+'?output=xlsx&_='+Date.now(),{cache:'no-store'});
@@ -974,7 +993,7 @@ async function loadWeb(){
       // keep only the tabs that are readable; never overwrite good data with a broken tab
       const part={}; let good=0;
       PAGES.forEach((p,i)=>{ const rows=wb[p.sheet]; if(!rows) return; try{ PARSERS[p.key](rows); part[p.sheet]=rows; good++; }catch(e){ es.push('tab "'+p.sheet+'": '+e.message); } });
-      if(good){ lastSrc='sheet (partial)'; acceptWorkbook(part,good+' of '+names.length+' tabs'); return; }
+      if(good){ lastSrc='sheet (partial)'; const bad=es.filter(x=>x.startsWith('tab ')).map(x=>x.slice(0,70)).join(' | '); acceptWorkbook(part,good+' of '+names.length+' tabs'+(bad?' – '+bad:'')); return; }
     }
     // 3) last resort: the CSV link (first tab only)
     try{
