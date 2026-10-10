@@ -144,6 +144,7 @@ tr:last-child td{border-bottom:0;}
       <div class="topright">
         <div class="status loading" id="status"><span class="dot"></span><span id="statusText">Updating…</span></div>
         <button class="refbtn" id="refreshBtn">⟳ Refresh</button>
+        <button class="refbtn" id="fileBtn" title="Sheet → File → Download → Microsoft Excel (.xlsx), then pick it here">📂 Load .xlsx</button><input type="file" id="fileIn" accept=".xlsx,.xls" hidden>
         <button class="dlbtn" id="downloadBtn">⬇ Download image</button>
       </div>
     </div>
@@ -817,7 +818,7 @@ function pgAttr(pts){
 function setStatus(state,detail){
   const el=document.getElementById('status'), txt=document.getElementById('statusText');
   el.className='status '+state;
-  const base=state==='live'?'Live':state==='loading'?'Updating…':state==='stale'?'Connection lost – showing last data':'Saved data';
+  const base=state==='live'?'Live':state==='loading'?'Updating…':state==='stale'?'Connection lost – showing last data':'Saved data (NOT live)';
   txt.textContent=detail?base+' – '+detail:base;
 }
 function acceptWorkbook(wb,when,partial){
@@ -948,6 +949,12 @@ async function loadWeb(){
     setStatus(isLive?'stale':'offline',whyFailed(es));
   } finally { loading=false; }
 }
+document.getElementById('fileBtn').addEventListener('click',()=>document.getElementById('fileIn').click());
+document.getElementById('fileIn').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return; const fr=new FileReader();
+  fr.onload=()=>{ try{ acceptWorkbook(xlsxToWorkbook(fr.result,'array'),new Date(),'loaded from file '+f.name); }catch(err){ setStatus('offline','could not read file: '+String(err.message||err).slice(0,60)); } e.target.value=''; };
+  fr.readAsArrayBuffer(f);
+});
 document.getElementById('refreshBtn').addEventListener('click',()=>{
   if(driveMcp){ setStatus('loading'); driveRefresh(); }
   else if(!IN_CLAUDE) loadWeb();
