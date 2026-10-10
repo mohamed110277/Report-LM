@@ -10,12 +10,10 @@
   --ink:#1c1f26; --sub:#5b6371; --line:#cdd1d8; --bg:#dcdfe4; --card:#eceef1;
   --blue:#2f5ee0; --green:#1a9c6b; --red:#d1394a; --orange:#e08a1f;
   --track:#dde0e6; --grid:#d2d6dc; --hover:#e1e4ea; color-scheme:light; --heat:47,94,224;
-  box-sizing:border-box;
 }
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif;}
 button{font-family:inherit;}
-
 .app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh;}
 .side{position:sticky;top:0;align-self:start;height:100vh;background:var(--card);border-inline-end:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
 .brand{font-size:17px;font-weight:800;padding:2px 10px 18px;display:flex;align-items:center;gap:10px;}
@@ -32,8 +30,6 @@ button{font-family:inherit;}
 .nav .chev.open svg{transform:rotate(180deg);}
 .nav.subnav{padding:8px 12px 8px 40px;font-size:13px;}
 .nav.subnav::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5;margin-inline-start:-14px;flex:none;}
-.nav .cnt{margin-inline-start:auto;font-size:11px;font-weight:700;background:var(--track);color:var(--sub);border-radius:10px;padding:2px 7px;}
-.nav.active .cnt{background:rgba(255,255,255,.22);color:#fff;}
 .main{padding:26px 24px 60px;min-width:0;max-width:1400px;width:100%;margin:0 auto;}
 h1{font-size:23px;margin:0 0 4px;}
 .sub{color:var(--sub);font-size:13.5px;margin:0 0 22px;}
@@ -48,7 +44,6 @@ h1{font-size:23px;margin:0 0 4px;}
 .refbtn:hover{background:var(--track);}
 .dlbtn{border:none;background:var(--green);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
 .dlbtn:disabled{opacity:.5;cursor:not-allowed;}
-
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;}
 .hubkpis{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:28px;}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-inline-start:4px solid var(--c,#333);min-width:0;}
@@ -57,13 +52,11 @@ h1{font-size:23px;margin:0 0 4px;}
 .kpi .val{font-size:26px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums;}
 .kpi .note{font-size:12px;color:var(--sub);margin-top:4px;}
 .up{color:var(--green);font-weight:700;} .dn{color:var(--red);font-weight:700;}
-
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;min-width:0;}
 .panel h2{font-size:15px;margin:0 0 3px;}
 .panel .cap{font-size:12.5px;color:var(--sub);margin:0 0 12px;}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-bottom:16px;}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin-bottom:16px;}
-.stack{display:flex;flex-direction:column;gap:16px;margin-bottom:16px;}
 .chart{width:100%;position:relative;}
 .chart svg{display:block;}
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--sub);margin-bottom:8px;}
@@ -72,13 +65,11 @@ h1{font-size:23px;margin:0 0 4px;}
 .insights{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;font-size:13.5px;line-height:1.5;}
 .insights li{padding-inline-start:16px;position:relative;}
 .insights li::before{content:"";position:absolute;inset-inline-start:0;top:.55em;width:7px;height:7px;border-radius:50%;background:var(--blue);}
-
 .hb{display:grid;grid-template-columns:minmax(90px,150px) minmax(0,1fr) auto;align-items:center;gap:10px;padding:5px 0;font-size:13px;}
 .hb .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
 .hb .tr{height:10px;background:var(--track);border-radius:6px;overflow:hidden;display:flex;gap:2px;}
 .hb .tr i{display:block;height:100%;}
 .hb .vl{font-variant-numeric:tabular-nums;font-weight:700;text-align:end;font-size:12.5px;white-space:nowrap;}
-
 .tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card);}
 table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums;}
 th,td{padding:8px 10px;text-align:end;white-space:nowrap;border-bottom:1px solid var(--line);}
@@ -94,7 +85,6 @@ tr:last-child td{border-bottom:0;}
 .search{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:8px 14px;font-size:13px;min-width:200px;}
 .pg{display:inline-block;width:70px;height:7px;background:var(--track);border-radius:5px;overflow:hidden;vertical-align:middle;}
 .pg i{display:block;height:100%;}
-
 .sortbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 16px;}
 .sortbar .sl{font-size:13px;color:var(--sub);font-weight:600;}
 .sortbtn{border:1px solid var(--line);background:var(--card);color:var(--sub);padding:8px 14px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;}
@@ -115,11 +105,9 @@ tr:last-child td{border-bottom:0;}
 .mini div{background:var(--track);border-radius:8px;padding:8px 10px;}
 .mini b{display:block;font-size:15px;}
 .mini span{font-size:11px;color:var(--sub);}
-
 #tip{position:fixed;z-index:99;pointer-events:none;background:var(--ink);color:var(--bg);padding:7px 10px;border-radius:8px;font-size:12px;line-height:1.45;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:240px;display:none;}
 #tip b{font-weight:700;}
 #tip i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:6px;}
-
 @media (max-width:820px){
   .nav.subnav{padding:9px 12px;}
   .nav.subnav::before{display:none;}
@@ -127,9 +115,9 @@ tr:last-child td{border-bottom:0;}
   .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;height:auto;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:8px 16px;border-inline-end:0;border-bottom:1px solid var(--line);gap:6px;}
   .brand,.navl{display:none;}
   .nav{width:auto;white-space:nowrap;padding:9px 12px;flex:none;}
-  .nav .cnt{display:none;}
   .main{padding:20px 16px 50px;}
 }
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -153,17 +141,16 @@ tr:last-child td{border-bottom:0;}
 <div id="tip"></div>
 
 <script>
+/* ============ SETTINGS ============ */
+// Your published Google Sheet link (File > Share > Publish to web > choose "Entire document")
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT0iCFywbMwN5Q-un5uhCrQ0LLNsDHwCcdOjGwx6SxPAIJoSvk__PNWHbaChmKXKnAlIZgJa16QfB4z/pub?output=csv';
-const REFRESH_MS = 20000;
+// Sheet ID (used for the instant "live" read; the sheet must be shared as "Anyone with the link: Viewer")
 const DRIVE_FILE_ID = '1U43Cqa-S362A0QTHigdliVJixmmBICX6zOFM3Z4u_aM';
+const REFRESH_MS = 20000;
 const DRIVE_SERVER = 'Google Drive';
 const DRIVE_TOOL = 'download_file_content';
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-// Saved snapshot of the whole workbook (shown until the live sheet loads, or if it can't be reached)
-const SNAPSHOT_WB = {"Email":[["Total Bosta",4928,4630,3963,667,0.14,142953,37,42,972,null,null,null,"OFD/Star",null,null,null,null,null,"Total star",null,null,null,"Standerd OFD"],["HUB Name","Target","Total stars","Active Star","absence","absence %","OFD","OFD/Star","Standerd OFD","Missing of target",null,null,null,"Total Bosta",142953,3963,43,null,null,"Total star",4643,null,null,"OFD",42],["Shorouk Hub",121,97,84,13,0.13,4828,57,50,37,null,null,null,"HUB Name","OFD","Active Star","OFD/Star",null,null,"HUB Name","Total stars",null,null,"HUB Name","Total stars"],["Gesr Elsuez Hub",149,131,101,30,0.23,5157,51,50,48,null,null,null,"03DSP-Elsadat Hub",1193,24,50,null,null,"03DSP-Elsadat Hub",35,null,null,"03DSP-Elsadat Hub",48],["03DSP-Elsadat Hub",33,22,24,-2,-0.09,1193,50,48,9,null,null,null,"Alexandria Hub",3242,97,33,null,null,"Alexandria Hub",113,null,null,"Alexandria Hub",47],["October Hub",133,101,79,22,0.22,3716,47,52,54,null,null,null,"Assiut Hub",1841,58,32,null,null,"Assiut Hub",65,null,null,"Assiut Hub",45],["Marg Hub",97,74,59,15,0.2,2725,46,43,38,null,null,null,"Aswan Hub",1165,32,36,null,null,"Aswan Hub",38,null,null,"Aswan Hub",50],["Hadayk October",126,109,89,20,0.18,4068,46,48,37,null,null,null,"Banha Hub",1620,53,31,null,null,"Banha Hub",59,null,null,"Banha Hub",43],["Suez Hub",42,36,33,3,0.08,1508,46,47,9,null,null,null,"Behira Hub",2288,75,31,null,null,"Behira Hub",83,null,null,"Behira Hub",45],["Matrouh Hub",32,26,23,3,0.12,1032,45,45,9,null,null,null,"Beni Suef Hub",1546,45,34,null,null,"Beni Suef Hub",56,null,null,"Beni Suef Hub",43],["Huarghada Hub",66,55,43,12,0.22,1860,43,55,23,null,null,null,"Dikernis Hub",1198,36,33,null,null,"Dikernis Hub",38,null,null,"Dikernis Hub",42],["Kafrelsheikh Hub",68,62,54,8,0.13,2325,43,47,14,null,null,null,"Domiatta Hub",2248,56,40,null,null,"Domiatta Hub",62,null,null,"Domiatta Hub",52],["Katamya-New Hub",99,96,80,16,0.17,3387,42,52,19,null,null,null,"Downtown Hub",2054,92,22,null,null,"Downtown Hub",100,null,null,"Downtown Hub",38],["Madinaty Hub",122,116,89,27,0.23,3751,42,52,33,null,null,null,"Edfo Hub",232,14,17,null,null,"Edfo Hub",16,null,null,"Edfo Hub",47],["Mokattam Hub",122,110,92,18,0.16,3870,42,49,30,null,null,null,"El Obour Hub",3883,105,37,null,null,"El Obour Hub",144,null,null,"El Obour Hub",47],["El-Sharkia Hub",116,95,88,7,0.07,3627,41,42,28,null,null,null,"ElAgamy Hub",3023,93,33,null,null,"ElAgamy Hub",105,null,null,"ElAgamy Hub",45],["Domiatta Hub",62,62,56,6,0.1,2248,40,52,6,null,null,null,"ElMahala Hub",2394,72,33,null,null,"ElMahala Hub",76,null,null,"ElMahala Hub",45],["Faisal Hub",96,81,69,12,0.15,2729,40,40,27,null,null,null,"El-Mansoura Hub",2402,73,33,null,null,"El-Mansoura Hub",86,null,null,"El-Mansoura Hub",44],["Hadayk El Ahram Hub",57,64,51,13,0.2,1950,38,52,6,null,null,null,"El-Sharkia Hub",3627,88,41,null,null,"El-Sharkia Hub",95,null,null,"El-Sharkia Hub",42],["Maadi Hub",96,91,77,14,0.15,2922,38,45,19,null,null,null,"Faisal Hub",2729,69,40,null,null,"Faisal Hub",81,null,null,"Faisal Hub",40],["New Valley Hub",10,7,6,1,0.14,226,38,50,4,null,null,null,"Faqous Hub",1224,44,28,null,null,"Faqous Hub",47,null,null,"Faqous Hub",39],["Haram Hub",126,112,94,18,0.16,3513,37,40,32,null,null,null,"Fayoum Hub",1503,43,35,null,null,"Fayoum Hub",47,null,null,"Fayoum Hub",43],["El Obour Hub",128,144,105,39,0.27,3883,37,47,23,null,null,null,"Gesr Elsuez Hub",5157,101,51,null,null,"Gesr Elsuez Hub",131,null,null,"Gesr Elsuez Hub",50],["Mansoura-Talkha Hub",91,77,70,7,0.09,2578,37,45,21,null,null,null,"Hadayk El Ahram Hub",1950,51,38,null,null,"Hadayk El Ahram Hub",64,null,null,"Hadayk El Ahram Hub",52],["Imbaba Hub",137,124,102,22,0.18,3744,37,40,35,null,null,null,"Hadayk October",4068,89,46,null,null,"Hadayk October",109,null,null,"Hadayk October",48],["Sharm EL Sheikh Hub",30,27,23,4,0.15,840,37,45,7,null,null,null,"Haram Hub",3513,94,37,null,null,"Haram Hub",112,null,null,"Haram Hub",40],["Aswan Hub",51,38,32,6,0.16,1165,36,50,19,null,null,null,"Hawamdya Hub",1589,51,31,null,null,"Hawamdya Hub",55,null,null,"Hawamdya Hub",42],["Nasr City Hub",187,169,145,24,0.14,5256,36,50,42,null,null,null,"Heliopolis Hub",2943,83,35,null,null,"Heliopolis Hub",124,null,null,"Heliopolis Hub",50],["Tanta Hub",78,74,67,7,0.09,2422,36,45,11,null,null,null,"Helwan Hub",2649,77,34,null,null,"Helwan Hub",90,null,null,"Helwan Hub",42],["Ismailia Hub",66,72,60,12,0.17,2143,36,42,6,null,null,null,"Huarghada Hub",1860,43,43,null,null,"Huarghada Hub",55,null,null,"Huarghada Hub",55],["Heliopolis Hub",120,124,83,41,0.33,2943,35,50,37,null,null,null,"Imbaba Hub",3744,102,37,null,null,"Imbaba Hub",124,null,null,"Imbaba Hub",40],["Khorshid Hub",114,113,101,12,0.11,3560,35,47,13,null,null,null,"Ismailia Hub",2143,60,36,null,null,"Ismailia Hub",72,null,null,"Ismailia Hub",42],["Fayoum Hub",49,47,43,4,0.09,1503,35,43,6,null,null,null,"Kafrelsheikh Hub",2325,54,43,null,null,"Kafrelsheikh Hub",62,null,null,"Kafrelsheikh Hub",47],["Port Said Hub",40,35,35,0,0,1206,34,45,5,null,null,null,"Katamya-New Hub",3387,80,42,null,null,"Katamya-New Hub",96,null,null,"Katamya-New Hub",52],["Helwan Hub",88,90,77,13,0.14,2649,34,42,11,null,null,null,"Khorshid Hub",3560,101,35,null,null,"Khorshid Hub",113,null,null,"Khorshid Hub",47],["Beni Suef Hub",51,56,45,11,0.2,1546,34,43,6,null,null,null,"Luxor Hub",761,33,23,null,null,"Luxor Hub",46,null,null,"Luxor Hub",44],["New October Hub",106,100,90,10,0.1,3060,34,47,16,null,null,null,"Maadi Hub",2922,77,38,null,null,"Maadi Hub",91,null,null,"Maadi Hub",45],["Zahraa El Maadi Hub",53,50,41,9,0.18,1389,34,45,12,null,null,null,"Madinaty Hub",3751,89,42,null,null,"Madinaty Hub",116,null,null,"Madinaty Hub",52],["Zahraa Nasr City Hub",111,94,84,10,0.11,3043,34,52,27,null,null,null,"Mansoura-Talkha Hub",2578,70,37,null,null,"Mansoura-Talkha Hub",77,null,null,"Mansoura-Talkha Hub",45],["Qalyoub Hub",46,49,37,12,0.24,1244,34,40,9,null,null,null,"Marg Hub",2725,59,46,null,null,"Marg Hub",74,null,null,"Marg Hub",43],["Alexandria Hub",106,113,97,16,0.14,3242,33,47,9,null,null,null,"Matrouh Hub",1032,23,45,null,null,"Matrouh Hub",26,null,null,"Matrouh Hub",45],["Dikernis Hub",44,38,36,2,0.05,1198,33,42,8,null,null,null,"Minya Hub",1954,75,26,null,null,"Minya Hub",83,null,null,"Minya Hub",42],["ElMahala Hub",82,76,72,4,0.05,2394,33,45,10,null,null,null,"Mohandseen Hub",2213,78,28,null,null,"Mohandseen Hub",86,null,null,"Mohandseen Hub",45],["New Cairo Hub",84,62,51,11,0.18,1691,33,50,33,null,null,null,"Mokattam Hub",3870,92,42,null,null,"Mokattam Hub",110,null,null,"Mokattam Hub",49],["Smouha Hub",107,110,102,8,0.07,3357,33,47,5,null,null,null,"Monufia Hub",2631,85,31,null,null,"Monufia Hub",96,null,null,"Monufia Hub",40],["El-Mansoura Hub",92,86,73,13,0.15,2402,33,44,19,null,null,null,"Nasr City Hub",5256,145,36,null,null,"Nasr City Hub",169,null,null,"Nasr City Hub",50],["ElAgamy Hub",96,105,93,12,0.11,3023,33,45,3,null,null,null,"New Cairo Hub",1691,51,33,null,null,"New Cairo Hub",62,null,null,"New Cairo Hub",50],["Assiut Hub",65,65,58,7,0.11,1841,32,45,7,null,null,null,"New October Hub",3060,90,34,null,null,"New October Hub",100,null,null,"New October Hub",47],["Hawamdya Hub",58,55,51,4,0.07,1589,31,42,7,null,null,null,"New Valley Hub",226,6,38,null,null,"New Valley Hub",7,null,null,"New Valley Hub",50],["Monufia Hub",107,96,85,11,0.11,2631,31,40,22,null,null,null,"October Hub",3716,79,47,null,null,"October Hub",101,null,null,"October Hub",52],["Banha Hub",55,59,53,6,0.1,1620,31,43,2,null,null,null,"Port Said Hub",1206,35,34,null,null,"Port Said Hub",35,null,null,"Port Said Hub",45],["Behira Hub",76,83,75,8,0.1,2288,31,45,1,null,null,null,"Qalyoub Hub",1244,37,34,null,null,"Qalyoub Hub",49,null,null,"Qalyoub Hub",40],["Mohandseen Hub",91,86,78,8,0.09,2213,28,45,13,null,null,null,"Qena Hub",1263,57,22,null,null,"Qena Hub",64,null,null,"Qena Hub",47],["Faqous Hub",48,47,44,3,0.06,1224,28,39,4,null,null,null,"Sharm EL Sheikh Hub",840,23,37,null,null,"Sharm EL Sheikh Hub",27,null,null,"Sharm EL Sheikh Hub",45],["Sohag Hub",80,75,71,4,0.05,1940,27,38,9,null,null,null,"Shobra Hub",3227,122,26,null,null,"Shobra Hub",135,null,null,"Shobra Hub",40],["Shobra Hub",122,135,122,13,0.1,3227,26,40,0,null,null,null,"Shorouk Hub",4828,84,57,null,null,"Shorouk Hub",97,null,null,"Shorouk Hub",50],["Minya Hub",73,83,75,8,0.1,1954,26,42,-2,null,null,null,"Smouha Hub",3357,102,33,null,null,"Smouha Hub",110,null,null,"Smouha Hub",47],["Luxor Hub",43,46,33,13,0.28,761,23,44,10,null,null,null,"Sohag Hub",1940,71,27,null,null,"Sohag Hub",75,null,null,"Sohag Hub",38],["Downtown Hub",87,100,92,8,0.08,2054,22,38,-5,null,null,null,"Suez Hub",1508,33,46,null,null,"Suez Hub",36,null,null,"Suez Hub",47],["Qena Hub",75,64,57,7,0.11,1263,22,47,18,null,null,null,"Tanta Hub",2422,67,36,null,null,"Tanta Hub",74,null,null,"Tanta Hub",45],["Edfo Hub",18,16,14,2,0.13,232,17,47,4,null,null,null,"Zahraa El Maadi Hub",1389,41,34,null,null,"Zahraa El Maadi Hub",50,null,null,"Zahraa El Maadi Hub",45],[null,null,null,null,null,null,null,null,null,null,null,null,null,"Zahraa Nasr City Hub",3043,84,36,null,null,"Zahraa Nasr City Hub",94,null,null,"Zahraa Nasr City Hub",52]],"Total Bosta":[["Date","Active"],["2026-10-01",3665],["2026-10-03",3768],["2026-10-04",3980],["2026-10-05",3979],["2026-10-06",3971],["2026-10-07",3988],["2026-10-08",3944],["2026-10-10",3963]],"ACQ Trend":[[null,"Month","2026-10-01","2026-10-03","2026-10-04","2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-10"],["Total",533,53,70,81,74,62,64,58,71],["El Obour Hub",35,1,4,5,7,null,5,6,7],["Imbaba Hub",28,1,3,5,6,8,2,1,2],["Shobra Hub",26,3,4,4,2,2,3,6,2],["Hadayk El Ahram Hub",37,6,11,3,6,2,4,3,2],["October Hub",14,1,1,4,1,4,null,1,2],["Gesr Elsuez Hub",31,3,4,9,2,3,7,2,1],["Haram Hub",15,3,2,3,3,null,2,null,2],["Madinaty Hub",10,4,null,2,null,2,1,null,1],["Nasr City Hub",17,1,2,2,6,null,null,3,3],["Mokattam Hub",21,2,5,1,2,2,4,4,1],["El-Sharkia Hub",12,1,4,1,1,null,1,2,2],["New October Hub",17,3,null,3,1,null,4,2,4],["Ismailia Hub",6,1,1,null,1,2,null,null,1],["Heliopolis Hub",16,2,2,1,2,3,2,null,4],["Maadi Hub",7,1,null,1,null,1,1,1,2],["Helwan Hub",12,null,1,3,1,2,1,3,1],["Sohag Hub",3,null,1,1,null,null,null,1],["Katamya-New Hub",17,2,1,1,3,3,2,2,3],["Minya Hub",10,2,null,1,3,3,null,1],["Downtown Hub",9,null,null,null,2,null,4,null,3],["Beni Suef Hub",4,1,null,1,null,null,1,null,1],["Mohandseen Hub",9,1,2,1,3,null,2],["Qalyoub Hub",8,null,null,null,2,1,1,1,3],["Faisal Hub",9,1,1,null,1,3,2,1],["Kafrelsheikh Hub",6,1,null,1,1,null,null,3],["Smouha Hub",7,null,3,null,2,1,1],["Mansoura-Talkha Hub",3,null,2,null,null,1],["Alexandria Hub",3,null,null,1,null,null,null,1,1],["Monufia Hub",2,1,null,1],["Zahraa El Maadi Hub",4,null,null,1,null,1,null,null,2],["Behira Hub",2,null,null,null,2],["Marg Hub",12,null,3,1,1,2,2,null,3],["Khorshid Hub",5,null,2,2,null,null,null,1],["Domiatta Hub",6,1,2,null,null,null,null,3],["Hadayk October",10,2,null,3,null,2,null,2,1],["Tanta Hub",3,null,1,null,null,null,null,null,2],["Fayoum Hub",4,null,null,1,null,3],["Aswan Hub",3,null,null,2,null,null,null,1],["Banha Hub",6,1,null,2,null,1,2],["ElMahala Hub",6,null,null,3,null,null,null,null,3],["El-Mansoura Hub",7,null,3,3,null,1],["Zahraa Nasr City Hub",7,1,1,null,2,1,2],["Huarghada Hub",7,1,null,1,1,2,null,null,2],["Port Said Hub",1,null,null,null,null,null,1],["Shorouk Hub",13,1,1,2,1,3,1,2,2],["ElAgamy Hub",8,null,null,1,null,1,1,null,5],["New Cairo Hub",10,2,1,null,4,null,null,3],["Luxor Hub",5,1,1,null,1,1,null,null,1],["Suez Hub",2,1,null,null,null,1],["Assiut Hub",5,null,null,3,1,null,1],["Qena Hub",3,null,null,null,null,null,2,null,1],["Sharm EL Sheikh Hub",1,null,null,null,1],["Hawamdya Hub",5,null,null,1,2,null,null,2],["Faqous Hub",2,null,null,null,null,null,1,null,1],["Dikernis Hub",2,null,1,null,null,null,1],["Matrouh Hub",0],["Edfo Hub",0],["New Valley Hub",0]],"last 15 days":[["OFD/STAR",38,37,37,39,47,42,38,38,40,41,49,44,41,39,38,36],["OFD",143115,139155,138356,145595,188121,162833,151732,148022,144590,154448,193565,174812,159924,156158,150185,142953],["Total Bosta",3772,3777,3710,3772,3994,3920,3953,3905,3646,3746,3954,3953,3946,3961,3925,3939],["Hub Name","2026-09-22","2026-09-23","2026-09-24","2026-09-26","2026-09-27","2026-09-28","2026-09-29","2026-09-30","2026-10-01","2026-10-03","2026-10-04","2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-10"],["Alexandria Hub",94,95,94,86,104,99,98,98,91,85,98,96,97,97,93,97],["Assiut Hub",53,56,54,55,56,57,56,57,48,53,58,57,59,55,53,58],["Aswan Hub",31,32,29,33,32,32,33,32,27,28,28,29,28,30,30,32],["Banha Hub",44,40,44,43,53,42,45,44,43,45,47,49,50,49,54,53],["Behira Hub",73,70,66,66,72,70,71,76,68,74,73,68,73,72,71,75],["Beni Suef Hub",46,45,44,45,47,43,44,43,42,47,48,43,47,44,47,45],["Dikernis Hub",30,33,31,34,34,33,34,30,34,33,35,35,36,36,35,36],["Domiatta Hub",52,52,51,50,58,54,53,54,52,53,56,52,53,53,55,56],["Downtown Hub",81,80,82,80,85,89,90,89,88,85,92,94,86,85,84,92],["Edfo Hub",14,13,15,16,14,15,14,13,14,14,16,14,14,14,14,14],["El Obour Hub",95,104,104,103,113,109,108,107,96,97,97,110,102,103,102,105],["ElAgamy Hub",86,77,84,85,90,89,91,89,80,86,91,85,83,92,85,93],["ElMahala Hub",67,69,68,70,73,73,70,67,66,67,69,69,70,72,67,72],["El-Mansoura Hub",73,69,71,72,77,80,80,80,77,76,81,78,77,77,80,73],["El-Sharkia Hub",83,85,82,83,88,84,83,81,78,80,83,86,79,80,81,88],["Faisal Hub",68,69,65,70,73,71,70,72,68,72,71,70,69,75,77,69],["Faqous Hub",41,44,44,45,45,44,44,45,44,45,44,44,45,41,45,44],["Fayoum Hub",35,38,37,37,46,42,39,39,36,38,39,38,39,42,40,43],["Gesr Elsuez Hub",98,97,96,100,106,102,108,106,102,100,106,109,103,105,105,101],["Hadayk El Ahram Hub",44,43,39,47,49,48,46,47,49,51,52,53,53,53,53,51],["Hadayk October",87,86,84,85,89,88,92,91,76,80,90,92,96,89,92,89],["Haram Hub",93,94,95,92,97,93,101,98,94,93,103,99,98,102,98,94],["Hawamdya Hub",43,46,47,45,47,47,46,47,46,47,44,45,46,46,47,51],["Heliopolis Hub",95,92,91,90,102,101,98,96,86,91,107,103,100,99,89,83],["Helwan Hub",77,76,76,76,75,73,78,74,73,79,81,77,81,81,84,77],["Huarghada Hub",46,42,48,45,48,52,48,44,43,45,49,51,50,48,49,43],["Imbaba Hub",105,103,99,110,112,102,107,105,95,105,104,110,111,108,106,102],["Ismailia Hub",50,51,56,59,61,55,56,61,52,59,61,60,57,57,53,60],["Kafrelsheikh Hub",51,52,48,51,58,52,54,52,46,46,52,55,54,52,53,54],["Katamya-New Hub",68,70,73,64,78,81,81,73,63,67,76,77,72,80,81,80],["Khorshid Hub",98,93,92,95,102,100,101,102,95,98,107,101,102,100,99,101],["Luxor Hub",30,34,29,36,30,32,36,36,32,33,37,35,36,35,36,33],["Maadi Hub",73,78,74,74,79,79,80,80,73,74,78,77,81,77,76,77],["Madinaty Hub",103,93,86,85,99,88,96,90,84,81,85,90,88,98,86,89],["Mansoura-Talkha Hub",70,70,71,69,70,71,70,67,68,72,69,67,71,70,69,70],["Marg Hub",56,55,53,58,54,57,59,62,48,57,55,61,61,59,60,59],["Matrouh Hub",21,21,20,23,22,20,19,19,19,21,21,21,23,22,22,23],["Minya Hub",64,65,62,62,67,63,65,62,62,65,66,67,70,73,72,75],["Mohandseen Hub",74,74,77,71,79,79,79,81,77,79,80,82,83,83,84,78],["Mokattam Hub",99,95,96,93,101,97,96,100,91,90,86,90,93,95,92,92],["Monufia Hub",83,87,85,87,87,89,90,91,86,87,89,87,85,89,83,85],["Nasr City Hub",136,140,129,143,149,146,149,150,148,132,150,155,148,145,150,145],["New Cairo Hub",58,58,58,52,60,59,58,56,56,49,56,60,55,59,53,51],["New October Hub",86,87,80,82,87,84,87,83,78,80,89,83,87,84,84,90],["New Valley Hub",6,6,7,6,6,7,6,6,2,5,5,7,6,6,7,6],["October Hub",82,84,81,80,88,95,89,87,79,75,93,92,94,92,88,79],["Port Said Hub",32,34,31,33,33,33,33,35,34,32,33,33,33,34,34,35],["Qalyoub Hub",40,38,38,39,43,43,39,39,35,40,38,37,37,37,37,37],["Qena Hub",54,55,54,57,54,58,58,55,55,55,55,54,53,52,53,57],["Sharm EL Sheikh Hub",21,26,23,22,20,18,23,23,20,21,22,25,23,22,23,23],["Shobra Hub",100,92,90,99,104,107,110,108,105,115,117,117,117,121,125,122],["Shorouk Hub",75,74,69,73,75,73,73,74,61,74,76,72,78,80,77,84],["Smouha Hub",99,100,97,98,102,101,97,97,85,84,96,99,95,99,93,102],["Sohag Hub",68,67,67,70,69,70,72,65,63,66,68,70,68,71,72,71],["Suez Hub",31,31,28,30,32,31,31,31,31,31,33,33,31,29,29,33],["Tanta Hub",64,64,67,68,70,67,66,66,64,64,68,67,69,68,69,67],["Zahraa El Maadi Hub",44,48,46,44,45,45,45,43,38,40,43,42,46,40,43,41],["Zahraa Nasr City Hub",82,85,83,86,85,88,88,87,80,85,88,81,85,84,86,84]],"Target":[["Total",null,null,null,4928,3963,972,37],["Region","Superviser","senior","Hub Name","Taregt","2026-10-10","Missing","OFD/ Star"],["Giza","Bahgat","Islam","October Hub",133,79,54,47],["Cairo","Bahgat","Islam","Gesr Elsuez Hub",149,101,48,51],["Cairo","Bahgat","Mohamed Gamal","Nasr City Hub",187,145,42,36],["Cairo","Bahgat","Islam","Marg Hub",97,59,38,46],["Cairo","Sayed Khaled","Ahmed Ali","Shorouk Hub",121,84,37,57],["Giza","Bahgat","Mohamed Gamal","Hadayk October",126,89,37,46],["Cairo","Sayed Khaled","Ahmed Ali","Heliopolis Hub",120,83,37,35],["Giza","Bahgat","Mohamed Gamal","Imbaba Hub",137,102,35,37],["Cairo","Sayed Khaled","Ahmed Ali","Madinaty Hub",122,89,33,42],["Cairo 2","Sayed Khaled","Ahmed Ali","New Cairo Hub",84,51,33,33],["Giza","Sayed Khaled","saied","Haram Hub",126,94,32,37],["Cairo 2","Bahgat","Islam","Mokattam Hub",122,92,30,42],["Delta","Sayed Khaled","Ahmed Ali","El-Sharkia Hub",116,88,28,41],["Cairo 2","Sayed Khaled","saied","Zahraa Nasr City Hub",111,84,27,36],["Giza","Sayed Khaled","saied","Faisal Hub",96,69,27,40],["Cairo","Sayed Khaled","saied","El Obour Hub",128,105,23,37],["Upper","Kahled","Belal","Huarghada Hub",66,43,23,43],["Delta","Bahgat","Mohamed Gamal","Monufia Hub",107,85,22,31],["Delta","Sayed Khaled","Ahmed Ali","Mansoura-Talkha Hub",91,70,21,37],["Upper","Kahled","Belal","Aswan Hub",51,32,19,36],["Cairo","Bahgat","Mohamed Gamal","Maadi Hub",96,77,19,38],["Cairo 2","Sayed Khaled","saied","Katamya-New Hub",99,80,19,42],["Delta","Sayed Khaled","saied","El-Mansoura Hub",92,73,19,33],["Upper","Kahled","Belal","Qena Hub",75,57,18,22],["Giza","Bahgat","Mohamed Gamal","New October Hub",106,90,16,34],["Delta","Bahgat","Islam","Kafrelsheikh Hub",68,54,14,43],["Alex","Bahgat","Mohamed Gamal","Khorshid Hub",114,101,13,35],["Giza","Bahgat","Islam","Mohandseen Hub",91,78,13,28],["Cairo","Bahgat","Mohamed Gamal","Zahraa El Maadi Hub",53,41,12,34],["Delta","Bahgat","Islam","Tanta Hub",78,67,11,36],["Cairo","Bahgat","Mohamed Gamal","Helwan Hub",88,77,11,34],["Delta","Bahgat","Islam","ElMahala Hub",82,72,10,33],["Upper","Kahled","Belal","Luxor Hub",43,33,10,23],["Delta","Kahled","Belal","03DSP-Elsadat Hub",33,24,9,59],["Alex","Bahgat","Islam","Alexandria Hub",106,97,9,33],["Canal","Kahled","Belal","Suez Hub",42,33,9,46],["Alex","Sayed Khaled","Ahmed Ali","Matrouh Hub",32,23,9,45],["Delta","Sayed Khaled","saied","Qalyoub Hub",46,37,9,34],["Upper","Kahled","Belal","Sohag Hub",80,71,9,27],["Delta","Sayed Khaled","Ahmed Ali","Dikernis Hub",44,36,8,33],["Upper","Kahled","Belal","Assiut Hub",65,58,7,32],["Giza","Sayed Khaled","saied","Hawamdya Hub",58,51,7,31],["Canal","Kahled","Belal","Sharm EL Sheikh Hub",30,23,7,37],["Canal","Kahled","Belal","Ismailia Hub",66,60,6,36],["Upper","Kahled","Belal","Fayoum Hub",49,43,6,35],["Delta","Bahgat","Islam","Domiatta Hub",62,56,6,40],["Upper","Kahled","Belal","Beni Suef Hub",51,45,6,34],["Giza","Bahgat","Islam","Hadayk El Ahram Hub",57,51,6,38],["Alex","Bahgat","Mohamed Gamal","Smouha Hub",107,102,5,33],["Delta","Kahled","Belal","Port Said Hub",40,35,5,34],["Upper","Kahled","Belal","Edfo Hub",18,14,4,17],["Delta","Sayed Khaled","saied","Faqous Hub",48,44,4,28],["Upper","Kahled","Belal","New Valley Hub",10,6,4,38],["Alex","Sayed Khaled","Ahmed Ali","ElAgamy Hub",96,93,3,33],["Delta","Sayed Khaled","saied","Banha Hub",55,53,2,31],["Alex","Sayed Khaled","saied","Behira Hub",76,75,1,31],["Cairo","Sayed Khaled","Ahmed Ali","Shobra Hub",122,122,0,26],["Upper","Kahled","Belal","Minya Hub",73,75,-2,26],["Cairo","Sayed Khaled","Ahmed Ali","Downtown Hub",87,92,-5,22],["Total Hubs",null,null,58]],"Urgent Hub":[[null,null,null,1292,1306,1414,1420,1406,1426,1399,1377,1915,538],["Superviser","senior","Hub Name","2026-10-01","2026-10-03","2026-10-04","2026-10-05","2026-10-06","2026-10-07","2026-10-08","2026-10-10","Taregt","Missing"],["Bahgat","Islam","October Hub",79,75,93,92,94,92,88,79,133,54],["Bahgat","Islam","Gesr Elsuez Hub",102,100,106,109,103,105,105,101,149,48],["Bahgat","Mohamed Gamal","Nasr City Hub",148,132,150,155,148,145,150,145,187,42],["Bahgat","Islam","Marg Hub",48,57,55,61,61,59,60,59,97,38],["Sayed Khaled","Ahmed Ali","Shorouk Hub",61,74,76,72,78,80,77,84,121,37],["Bahgat","Mohamed Gamal","Hadayk October",76,80,90,92,96,89,92,89,126,37],["Sayed Khaled","Ahmed Ali","Heliopolis Hub",86,91,107,103,100,99,89,83,120,37],["Sayed Khaled","Ahmed Ali","Madinaty Hub",84,81,85,90,88,98,86,89,122,33],["Sayed Khaled","Ahmed Ali","New Cairo Hub",56,49,56,60,55,59,53,51,84,33],["Sayed Khaled","saied","Haram Hub",94,93,103,99,98,102,98,94,126,32],["Bahgat","Islam","Mokattam Hub",91,90,86,90,93,95,92,92,122,30],["Sayed Khaled","Ahmed Ali","El-Sharkia Hub",78,80,83,86,79,80,81,88,116,28],["Sayed Khaled","saied","Zahraa Nasr City Hub",80,85,88,81,85,84,86,84,111,27],["Sayed Khaled","saied","Faisal Hub",68,72,71,70,69,75,77,69,96,27],["Sayed Khaled","saied","Katamya-New Hub",63,67,76,77,72,80,81,80,99,19],["Bahgat","Mohamed Gamal","New October Hub",78,80,89,83,87,84,84,90,106,16]],"Attrition Carve":[["Avreage"],["2026-10-01",50],["2026-10-03",25],["2026-10-04",20],["2026-10-05",22],["2026-10-06",40],["2026-10-07",58],["2026-10-08",102],["2026-10-10",50]]};
-
-// Tab names in the Google Sheet (matched ignoring case/spaces; order is the fallback)
 const PAGES = [
   {key:'hubs',   sheet:'Email',          label:'Hubs',          icon:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'},
   {key:'bosta',  sheet:'Total Bosta',    label:'Total Bosta',   icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>'},
@@ -221,7 +208,6 @@ function parseHubs(rows){
   let side={}; try{ side=parseSide(rows); }catch(e){ console.warn('side tables:',e); }
   return {hubs,totals,side};
 }
-// The three small tables to the right of the main hub table (each starts with a "HUB Name" header)
 function parseSide(rows){
   const out=[];
   for(let r=0;r<rows.length;r++){
@@ -229,14 +215,16 @@ function parseSide(rows){
     for(let c=10;c<row.length;c++){
       if(nrm(row[c])!=='hubname') continue;
       const names=[]; for(let k=c;k<row.length&&row[k]!=null&&row[k]!=='';k++) names.push(String(row[k]).trim());
-      const nv=names.length-1; const hubs=[];
+      const hubs=[];
       for(let i=r+1;i<rows.length;i++){ const nm=rows[i][c]; if(nm==null||String(nm).trim()==='') break;
         hubs.push({name:String(nm).trim(),vals:names.slice(1).map((_,j)=>nn(rows[i][c+1+j]))}); }
       const sr=rows[r-1]||[], tr=rows[r-2]||[];
-      out.push({title:String(tr[c]||sr[c]||''),cols:names.slice(1),hubs,sumLabel:String(sr[c]||''),sum:names.slice(1).map((_,j)=>nn(sr[c+1+j]))});
+      out.push({title:String(tr[c]||''),cols:names.slice(1),hubs,sumLabel:String(sr[c]||''),sum:names.slice(1).map((_,j)=>nn(sr[c+1+j]))});
     }
   }
-  const t1=out.find(t=>t.cols.some(x=>nrm(x)==='ofd/star')), t3=out.find(t=>/stand/i.test(t.title)), t2=out.find(t=>t!==t1&&t!==t3);
+  const t1=out.find(t=>t.cols.some(x=>nrm(x)==='ofd/star'));
+  const t3=out.find(t=>/stand/i.test(t.title)) || (out.length>=3?out[2]:undefined);
+  const t2=out.find(t=>t!==t1&&t!==t3);
   return {ofd:t1,stars:t2,std:t3};
 }
 function parseSeries(rows){
@@ -285,22 +273,22 @@ function parseTarget(rows){
     hubs.push({hub:name,region:String(r[c.region]||'Other').trim()||'Other',sup:String(r[c.sup]||'-').trim()||'-',sen:String(r[c.sen]||'-').trim()||'-',target:t,missing:fin(m)?m:0,ofd:nn(r[c.ofd])});
   }
   if(!hubs.length) throw new Error('no hubs');
-  let sheetTotal=null; const tr=hi>0?rows[hi-1]:null, tr0=rows.slice(0,hi).find(r=>nrm(r[0])==='total');
+  let sheetTotal=null; const tr0=rows.slice(0,hi).find(r=>nrm(r[0])==='total');
   if(tr0 && fin(nn(tr0[c.target]))) sheetTotal={target:nn(tr0[c.target]),missing:nn(tr0[c.miss])};
   return {hubs,sheetTotal};
 }
 function parseUrgent(rows){
   const hi = rows.findIndex(r=>nrm(r[2])==='hubname');
   if(hi<0) throw new Error('header not found');
-  const head=rows[hi]; let cols=[]; head.forEach((c,i)=>{ if(isDate(c)) cols.push(i); });
+  const head=rows[hi];
   const nh=head.map(nrm); const ti=nh.indexOf('taregt')>=0?nh.indexOf('taregt'):nh.indexOf('target'); const mi=nh.indexOf('missing');
+  const dateIdx=[]; head.forEach((c,i)=>{ if(isDate(c)) dateIdx.push(i); });
   const hubs=[];
   for(const r of rows.slice(hi+1)){ const name=String(r[2]==null?'':r[2]).trim(); if(!name) continue;
-    hubs.push({name,sup:String(r[0]||'-'),sen:String(r[1]||'-'),vals:cols.map(i=>nn(r[i])),target:nn(r[ti]),missing:nn(r[mi])}); }
-  cols=cols.filter((_,k)=>hubs.some(h=>fin(h.vals[k])));
-  const keep=head.map((c,i)=>i).filter(i=>isDate(head[i]));
-  const dates=[]; const idx=[]; keep.forEach((i,k)=>{ if(hubs.some(h=>fin(h.vals[k]))){ dates.push(head[i]); idx.push(k); } });
-  hubs.forEach(h=>{ h.vals=idx.map(k=>h.vals[k]); });
+    hubs.push({name,sup:String(r[0]||'-'),sen:String(r[1]||'-'),vals:dateIdx.map(i=>nn(r[i])),target:nn(r[ti]),missing:nn(r[mi])}); }
+  const keep=[]; dateIdx.forEach((_,k)=>{ if(hubs.some(h=>fin(h.vals[k]))) keep.push(k); });
+  const dates=keep.map(k=>head[dateIdx[k]]);
+  hubs.forEach(h=>{ h.vals=keep.map(k=>h.vals[k]); });
   if(!hubs.length||!dates.length) throw new Error('no data');
   return {dates,hubs};
 }
@@ -334,12 +322,14 @@ function drawLine(el,c){
   const W=Math.max(260,el.clientWidth||600), H=c.height||230, m={l:48,r:18,t:16,b:30};
   const n=c.labels.length;
   const vals=c.series.flatMap(s=>s.values.filter(fin));
+  if(!vals.length){ el.innerHTML='<p class="cap">No data</p>'; return; }
   let lo=Math.min(...vals), hi=Math.max(...vals); if(c.zero) lo=Math.min(0,lo);
   const ticks=niceTicks(lo,hi); lo=ticks[0]; hi=ticks[ticks.length-1];
-  m.l=Math.max(48,14+6.4*Math.max(...ticks.map(t=>(c.fmt||fmt)(t).length)));
+  const f=c.fmt||fmt;
+  m.l=Math.max(48,14+6.4*Math.max(...ticks.map(t=>f(t).length)));
   const iw=W-m.l-m.r, ih=H-m.t-m.b;
   const X=i=>m.l+(n<2?iw/2:i*iw/(n-1)), Y=v=>m.t+ih-(v-lo)/((hi-lo)||1)*ih;
-  const f=c.fmt||fmt; let g='';
+  let g='';
   ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/><text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="var(--sub)">${esc(f(t))}</text>`; });
   xlabelIdx(n,iw).forEach(i=>{ g+=`<text x="${X(i)}" y="${H-9}" text-anchor="middle" font-size="11" fill="var(--sub)">${esc(c.labels[i])}</text>`; });
   c.series.forEach(s=>{
@@ -350,9 +340,9 @@ function drawLine(el,c){
   });
   const ls=c.series.find(s=>!s.dashed)||c.series[0]; let li=-1; ls.values.forEach((v,i)=>{ if(fin(v)) li=i; });
   if(li>=0 && c.endLabel!==false){ g+=`<text x="${Math.min(X(li),W-m.r)}" y="${Y(ls.values[li])-12}" text-anchor="${li>n-3?'end':'middle'}" font-size="12" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(ls.values[li]))}</text>`; }
-  g+=`<line id="cx" x1="0" x2="0" y1="${m.t}" y2="${m.t+ih}" stroke="var(--sub)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>`;
+  g+=`<line class="cx" x1="0" x2="0" y1="${m.t}" y2="${m.t+ih}" stroke="var(--sub)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>`;
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(c.title||'chart')}">${g}<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/></svg>`;
-  const svg=el.querySelector('svg'), cx=svg.querySelector('#cx');
+  const svg=el.querySelector('svg'), cx=svg.querySelector('.cx');
   const move=ev=>{
     const r=svg.getBoundingClientRect(), p=(ev.touches?ev.touches[0]:ev);
     const i=Math.max(0,Math.min(n-1,Math.round((p.clientX-r.left-m.l)/(iw||1)*(n-1))));
@@ -404,7 +394,7 @@ function insights(list){ return `<div class="panel"><h2>Key insights</h2><p clas
 function heatCell(v,lo,hi,txt){ if(!fin(v)) return '<td class="heat" style="color:var(--sub)">–</td>'; const t=hi>lo?(v-lo)/(hi-lo):0.5; return `<td class="heat" style="background:rgba(var(--heat),${(0.06+0.5*t).toFixed(2)})">${esc(txt!=null?txt:fmt(v))}</td>`; }
 
 // ================= State =================
-let WB = SNAPSHOT_WB, MODEL = {}, errs = {};
+let WB = {}, MODEL = {}, errs = {};
 let D = [], TOTALS = null, kpis = [], ofdMin = 0, ofdMax = 1, currentSorted = [];
 let isLive=false, lastUpdate=null, lastRaw=null, loading=false, driveMcp=null, sortMode='ofd';
 let current = 'hubs';
@@ -416,6 +406,10 @@ function findSheet(wb,p,idx){
   return wb[k!=null?k:names[idx]];
 }
 const PARSERS = {hubs:parseHubs,bosta:parseSeries,acq:parseAcq,days:parseDays,target:parseTarget,urgent:parseUrgent,attr:parseSeries};
+// true only if EVERY tab can be read correctly
+function validWorkbook(wb){
+  return PAGES.every((p,i)=>{ try{ const rows=findSheet(wb,p,i); if(!rows) return false; PARSERS[p.key](rows); return true; }catch(e){ return false; } });
+}
 function applyWorkbook(wb){
   WB=wb;
   PAGES.forEach((p,i)=>{
@@ -444,7 +438,8 @@ function go(k){ current=k; try{ history.replaceState(null,'','#'+k); }catch(e){}
 
 // ================= Pages =================
 function setSubtitle(t){ document.getElementById('subtitle').textContent=t; }
-function stamp(){ return isLive && lastUpdate ? 'Updated '+lastUpdate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : 'Saved snapshot'; }
+let lastSrc='', lastStatusText='';
+function stamp(){ return isLive && lastUpdate ? 'Updated '+(new Date()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})+(lastSrc?' \u00B7 '+lastSrc:'') : (lastStatusText||'connecting\u2026'); }
 function renderPage(){
   CH.length=0; hideTip();
   const sub=SUBS.find(x=>x.key===current), mk=sub?'hubs':current;
@@ -452,13 +447,14 @@ function renderPage(){
   document.getElementById('pageTitle').textContent=sub?'Hubs \u00B7 '+sub.label:p.label;
   document.getElementById('downloadBtn').hidden = current!=='hubs';
   const host=document.getElementById('page');
+  const noData=(title,msg)=>{ host.innerHTML=`<div class="panel"><h2>${esc(title)}</h2><p class="cap">${esc(msg)}</p></div>`; setSubtitle(stamp()); };
   if(sub){
     const t=MODEL.hubs&&MODEL.hubs.side&&MODEL.hubs.side[sub.m];
-    if(!t){ host.innerHTML=`<div class="panel"><h2>Table not found</h2><p class="cap">Could not find the \u201C${esc(sub.label)}\u201D table to the right of the hubs table in the first tab.</p></div>`; setSubtitle(stamp()); return; }
+    if(!t){ return noData(isLive?'Table not found':'Loading\u2026', isLive?'Could not find the \u201C'+sub.label+'\u201D table to the right of the hubs table in the first tab.':'Reading the Google Sheet, please wait.'); }
     host.innerHTML={ofd:pgSideOfd,stars:pgSideStars,std:pgSideStd}[sub.m](t,MODEL.hubs.side);
     mountCharts(); mountSide(current); return;
   }
-  if(!MODEL[current]){ host.innerHTML=`<div class="panel"><h2>No data for this tab</h2><p class="cap">Could not read the “${esc(p.sheet)}” tab${errs[current]?': '+esc(errs[current]):''}.</p></div>`; setSubtitle(stamp()); return; }
+  if(!MODEL[current]){ return noData(isLive?'No data for this tab':'Loading\u2026', isLive?'Could not read the \u201C'+p.sheet+'\u201D tab'+(errs[current]?': '+errs[current]:'')+'.':'Reading the Google Sheet, please wait.'); }
   const fn={hubs:pgHubs,bosta:pgBosta,acq:pgAcq,days:pgDays,target:pgTarget,urgent:pgUrgent,attr:pgAttr}[current];
   host.innerHTML=fn(MODEL[current]);
   mountCharts();
@@ -612,8 +608,8 @@ function pgSideStd(t,side){
     cmp.length?`Largest shortfall: <b>${esc(worst[0].name)}</b> (${signed(worst[0].gap)}), ${esc(worst[1].name)} (${signed(worst[1].gap)}), ${esc(worst[2].name)} (${signed(worst[2].gap)}).`:'',
     cmp.length?`Best vs standard: <b>${esc(best[0].name)}</b> (${signed(best[0].gap)}), ${esc(best[1].name)} (${signed(best[1].gap)}).`:'',
     `<span style="color:var(--sub)">The sheet labels this table\u2019s value column \u201CTotal stars\u201D, but the title says \u201CStanderd OFD\u201D, so it is read as the standard OFD per star.</span>`].filter(Boolean))}`
-  +sTable('hubs_std',[{k:'name',label:'Hub',l:1},{k:'std',label:'Standard',td:r=>`<td>${fmt(r.std)}</td>`},{k:'act',label:'Actual OFD/Star',td:r=>`<td>${fin(r.act)?fmt(r.act):'\u2013'}</td>`},
-    {k:'gap',label:'Gap',td:r=>`<td>${fin(r.gap)?`<span class="${r.gap<0?'dn':'up'}">${signed(r.gap)}</span>`:'\u2013'}</td>`}],rows.map(r=>({...r,gap:fin(r.gap)?r.gap:-999,act:fin(r.act)?r.act:-1})),'gap',1);
+  +sTable('hubs_std',[{k:'name',label:'Hub',l:1},{k:'std',label:'Standard',td:r=>`<td>${fmt(r.std)}</td>`},{k:'act',label:'Actual OFD/Star',td:r=>`<td>${r.act>=0?fmt(r.act):'\u2013'}</td>`},
+    {k:'gap',label:'Gap',td:r=>`<td>${r.gap>-999?`<span class="${r.gap<0?'dn':'up'}">${signed(r.gap)}</span>`:'\u2013'}</td>`}],rows.map(r=>({...r,gap:fin(r.gap)?r.gap:-999,act:fin(r.act)?r.act:-1})),'gap',1);
 }
 
 // ---- Total Bosta ----
@@ -766,7 +762,7 @@ function pgUrgent(m){
   const tot=m.dates.map((_,i)=>sum(m.hubs.map(h=>h.vals[i])));
   const T=sum(m.hubs.map(h=>h.target)), cur=last(tot), M=T-cur, chg=cur-tot[0];
   setSubtitle(`${m.hubs.length} priority hubs • ${labels[0]} – ${labels[n-1]} • ${stamp()}`);
-  const rows=[...m.hubs].map(h=>({...h,cur:last(h.vals.filter(fin)),gap:h.target-last(h.vals.filter(fin)),ch:last(h.vals.filter(fin))-h.vals.filter(fin)[0]})).sort((a,b)=>b.gap-a.gap);
+  const rows=[...m.hubs].map(h=>{ const v=h.vals.filter(fin); const c=last(v); return {...h,cur:c,gap:h.target-c,ch:c-v[0]}; }).sort((a,b)=>b.gap-a.gap);
   const grow=rows.filter(r=>r.ch>0).length, flat=rows.filter(r=>r.ch<=0);
   const body=rows.map(h=>{ const p=Math.max(0,Math.min(100,h.cur/h.target*100)); const col=p>=90?'var(--green)':p>=75?'var(--orange)':'var(--red)';
     return `<tr><td>${esc(h.name)}</td><td class="l">${esc(h.sup)}</td><td class="l">${esc(h.sen)}</td><td>${fmt(h.target)}</td><td>${fmt(h.cur)}</td><td class="dn">${fmt(h.gap)}</td><td><span class="pg"><i style="width:${p}%;background:${col}"></i></span> ${p.toFixed(0)}%</td><td>${deltaHtml(h.ch)}</td><td>${spark(h.vals)}</td></tr>`; }).join('');
@@ -809,7 +805,7 @@ function pgAttr(pts){
       `Latest value is <b>${fmt(lastp.v)}</b> on ${dl(lastp.d)}, <b>${signed(vsAvg,0)}%</b> versus the period average of ${avg.toFixed(1)}.`,
       rising?`It has risen for three days in a row (${pts.slice(-4).map(p=>p.v).join(' → ')}).`:`Peak was ${fmt(peak.v)} on ${dl(peak.d)}.`,
       `${pts.filter(p=>p.v>avg).length} of ${pts.length} days were above average.`,
-      `<span style="color:var(--sub)">Values are shown exactly as entered in the “Attrition Carve” tab (column header: “Avreage”).</span>`])}
+      `<span style="color:var(--sub)">Values are shown exactly as entered in the “Attrition Carve” tab.</span>`])}
   </div>`;
 }
 
@@ -817,24 +813,25 @@ function pgAttr(pts){
 function setStatus(state,detail){
   const el=document.getElementById('status'), txt=document.getElementById('statusText');
   el.className='status '+state;
-  const base=state==='live'?'Live':state==='loading'?'Updating…':state==='stale'?'Connection lost – showing last data':'Saved data (NOT live)';
-  txt.textContent=detail?base+' – '+detail:base;
+  const base=state==='live'?'Live':state==='loading'?'Updating…':state==='stale'?'Connection lost – showing last data':'Not live';
+  txt.textContent=detail?base+' – '+detail:base; lastStatusText=txt.textContent;
+  if(!isLive){ const st=document.getElementById('subtitle'); if(st && !MODEL[current]) st.textContent=stamp(); }
 }
-const LS_KEY='hubsPerfLastWB_v1';
+const LS_KEY='hubsPerfLastWB_v2';
 function saveLast(wb){ try{ localStorage.setItem(LS_KEY,JSON.stringify({t:Date.now(),wb})); }catch(e){} }
 function loadLast(){ try{ const o=JSON.parse(localStorage.getItem(LS_KEY)||'null'); if(o&&o.wb&&o.t) return o; }catch(e){} return null; }
-function acceptWorkbook(wb,when,partial){
-  const raw=JSON.stringify(wb); saveLast(wb);
-  if(raw!==lastRaw){ applyWorkbook(wb); lastRaw=raw; }
-  isLive=true; lastUpdate=when||new Date();
-  if(PAGES.some(p=>MODEL[p.key])) renderPage();
+function acceptWorkbook(wb,partial){
+  const merged={...WB,...wb}, raw=JSON.stringify(merged);
+  const changed=raw!==lastRaw, firstLive=!isLive;
+  isLive=true; lastUpdate=new Date();
+  if(changed){ saveLast(merged); lastRaw=raw; applyWorkbook(merged); }   // re-draw ONLY when the numbers changed
+  else if(firstLive) renderPage();
   setStatus('live','checked '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})+(partial?' \u00B7 '+partial:''));
 }
 
-// Convert an xlsx file (base64) to {tabName: rows[][]}
-function xlsxToWorkbook(b64,type){
+function xlsxToWorkbook(data,type){
   if(typeof XLSX==='undefined') throw new Error('spreadsheet reader did not load');
-  const book=XLSX.read(b64,{type:type||'base64'}); const out={};
+  const book=XLSX.read(data,{type:type||'base64'}); const out={};
   book.SheetNames.forEach(name=>{
     const ws=book.Sheets[name]; if(!ws['!ref']){ out[name]=[]; return; }
     const rg=XLSX.utils.decode_range(ws['!ref']); const rows=[];
@@ -844,6 +841,7 @@ function xlsxToWorkbook(b64,type){
         const cell=ws[XLSX.utils.encode_cell({r,c})]; let v=null;
         if(cell && cell.v!=null){
           if(cell.t==='n' && cell.z && XLSX.SSF.is_date(cell.z)){ const d=XLSX.SSF.parse_date_code(cell.v); v=d.y+'-'+String(d.m).padStart(2,'0')+'-'+String(d.d).padStart(2,'0'); }
+          else if(cell.t==='d' && cell.v instanceof Date){ const d=cell.v; v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
           else if(cell.t==='e') v=null; else v=cell.v;
         }
         row.push(v);
@@ -861,24 +859,22 @@ function extractB64(p){
   if(typeof p==='string'){ const s=p.trim(); if(s.startsWith('{')){ try{ return extractB64(JSON.parse(s)); }catch(e){} } return s; }
   return '';
 }
-// Path A: Google Drive connector (inside claude.ai)
+// Path A: Google Drive connector (only inside claude.ai)
 let driveBusy=false;
 async function driveRefresh(){
   if(!driveMcp||driveBusy) return; driveBusy=true;
   try{
-    // same method as the Contractors Target dashboard: download the workbook with the cache switched off
     const res=await driveMcp.callTool(DRIVE_SERVER,DRIVE_TOOL,{fileId:DRIVE_FILE_ID,exportMimeType:XLSX_MIME},{cache:{staleTime:0}});
     let b64='';
     const txt=(res&&res.content||[]).find(x=>x&&x.type==='text');
     if(txt){ try{ b64=JSON.parse(txt.text).content; }catch(e){ b64=extractB64(txt.text); } }
     if(!b64) b64=extractB64(res&&res.payload);
     if(!b64) throw new Error('empty Google Drive answer');
-    acceptWorkbook(xlsxToWorkbook(b64),new Date());
+    lastSrc='Google Drive'; acceptWorkbook(xlsxToWorkbook(b64));
   }catch(e){
     console.warn('Google Drive read failed:',e);
-    const code=e&&e.code, msg=String(e&&e.message||e);
-    if(['not_granted','server_not_connected','needs_reauth','approval_required','blocked_by_policy'].includes(code)||/not.?granted|reauth|approval|not connected/i.test(msg)) setStatus('offline','allow Google Drive access to see live data');
-    else setStatus(isLive?'stale':'offline',isLive?'':msg.slice(0,80));
+    setStatus(isLive?'stale':'offline',String(e&&e.message||e).slice(0,80));
+    loadWeb();
   }finally{ driveBusy=false; }
 }
 function startDrive(mcp){
@@ -888,22 +884,31 @@ function startDrive(mcp){
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) driveRefresh(); });
 }
 
-// Path B: read each tab from Google over the web (hosted page / local file)
+// Path B: read the sheet over the web (your hosting site)
 function gvizDate(v){ const m=/^Date\((\d+),(\d+),(\d+)/.exec(v); return m? m[1]+'-'+String(+m[2]+1).padStart(2,'0')+'-'+String(+m[3]).padStart(2,'0') : v; }
+function respToRows(resp){
+  if(!resp||resp.status!=='ok'||!resp.table){ const er=resp&&resp.errors&&resp.errors[0]; const msg=er?String(er.reason||'')+' '+String(er.message||''):'bad response'; throw new Error(/access|denied|permission|sign/i.test(msg)?'HTTP 403':'bad response: '+msg); }
+  const rows=(resp.table.rows||[]).map(r=>{ const row=(r.c||[]).map(cell=>{ if(!cell||cell.v==null) return null; return typeof cell.v==='string'?gvizDate(cell.v):cell.v; }); while(row.length&&row[row.length-1]==null) row.pop(); return row; });
+  while(rows.length&&!rows[rows.length-1].length) rows.pop();
+  return rows;
+}
+function gvizUrl(name,extra){ return 'https://docs.google.com/spreadsheets/d/'+DRIVE_FILE_ID+'/gviz/tq?sheet='+encodeURIComponent(name)+'&headers=0&tqx='+extra+'&_='+Date.now(); }
+async function loadTabFetch(name){
+  const res=await fetch(gvizUrl(name,'out:json'),{cache:'no-store',credentials:'omit'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const t=await res.text(); const i=t.indexOf('{'), j=t.lastIndexOf('}');
+  if(i<0||j<i) throw new Error('bad response');
+  return respToRows(JSON.parse(t.slice(i,j+1)));
+}
+async function loadTab(name){ try{ return await loadTabFetch(name); }catch(e1){ try{ return await loadTabJsonp(name); }catch(e2){ throw e1; } } }
 function loadTabJsonp(name){
   return new Promise((resolve,reject)=>{
     const cb='__gv'+Date.now()+Math.floor(Math.random()*1e6), s=document.createElement('script'); let done=false,timer=null;
     const cleanup=()=>{ done=true; clearTimeout(timer); try{ delete window[cb]; }catch(e){ window[cb]=undefined; } s.remove(); };
     timer=setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('timeout')); } },10000);
-    window[cb]=resp=>{
-      if(done) return; cleanup();
-      if(!resp||resp.status!=='ok'||!resp.table){ const er=resp&&resp.errors&&resp.errors[0]; const msg=er?String(er.reason||'')+' '+String(er.message||''):'bad response'; reject(new Error(/access|denied|permission|sign/i.test(msg)?'HTTP 403':'bad response: '+msg)); return; }
-      const rows=(resp.table.rows||[]).map(r=>{ const row=(r.c||[]).map(cell=>{ if(!cell||cell.v==null) return null; return typeof cell.v==='string'?gvizDate(cell.v):cell.v; }); while(row.length&&row[row.length-1]==null) row.pop(); return row; });
-      while(rows.length&&!rows[rows.length-1].length) rows.pop();
-      resolve(rows);
-    };
+    window[cb]=resp=>{ if(done) return; cleanup(); try{ resolve(respToRows(resp)); }catch(e){ reject(e); } };
     s.onerror=()=>{ if(!done){ cleanup(); reject(new Error('script blocked')); } };
-    s.src='https://docs.google.com/spreadsheets/d/'+DRIVE_FILE_ID+'/gviz/tq?sheet='+encodeURIComponent(name)+'&headers=0&tqx=out:json;responseHandler:'+cb+'&_='+Date.now();
+    s.src=gvizUrl(name,'out:json;responseHandler:'+cb);
     document.head.appendChild(s);
   });
 }
@@ -919,8 +924,8 @@ function parseCSV(text){
   return rows.map(r=>{ r=r.map(c=>c===''?null:c); while(r.length&&r[r.length-1]==null) r.pop(); return r; });
 }
 function whyFailed(es){
-  if(es.some(e=>/^HTTP (401|403|404)/.test(e))) return 'Google refused access \u2013 in the sheet press Share and set \u201CAnyone with the link\u201D to Viewer';
-  if(es.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'could not reach the published link (blocked network, or opened inside claude.ai which blocks it) \u2013 host the file on your own site';
+  if(es.some(e=>/^HTTP (401|403|404)/.test(e))) return 'Google refused access \u2013 in the sheet press Share and set \u201CAnyone with the link\u201D to Viewer, and publish the entire document to the web';
+  if(es.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'could not reach Google (no internet, or the page is opened inside a network that blocks it)';
   return 'unexpected answer from Google';
 }
 function csvDates(rows){ return rows.map(r=>r.map(c=>{ if(typeof c!=='string') return c; const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(c.trim()); return m? m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0') : c; })); }
@@ -933,21 +938,27 @@ async function loadWeb(){
   if(loading) return; loading=true; if(!isLive) setStatus('loading');
   const es=[];
   try{
-    const first=PAGES[0].sheet;
-    // 1) the published link as xlsx: every tab, straight from the link you gave
-    try{ const x=await loadPubXlsx(); acceptWorkbook({...WB,...x},null,'published link'); return; }
+    const first=PAGES[0].sheet, names=PAGES.map(p=>p.sheet);
+    // 1) fastest: read every tab straight from the sheet (no publish delay)
+    const res=await Promise.allSettled(names.map(nm=>loadTab(nm)));
+    const wb={}; let ok=0;
+    res.forEach((r,i)=>{ if(r.status==='fulfilled'&&r.value.length){ wb[names[i]]=r.value; ok++; } else if(r.status==='rejected') es.push(String(r.reason&&r.reason.message||r.reason)); });
+    // use it only if every tab is readable correctly (Google can drop text cells in mixed columns)
+    if(ok===names.length && validWorkbook(wb)){ lastSrc='sheet (direct)'; acceptWorkbook(wb,'live'); return; }
+    if(ok===names.length) es.push('direct read returned incomplete cells');
+    // 2) the published link as xlsx: exact cell values for every tab (Google may delay a few minutes)
+    try{ const x=await loadPubXlsx(); if(validWorkbook(x)){ lastSrc='published link'; acceptWorkbook(x,'published link (may lag a few minutes)'); return; } es.push('published xlsx incomplete'); }
     catch(e){ es.push(String(e&&e.message||e)); }
-    // 2) the same link as CSV (first tab only)
+    if(ok){ const part={}; names.forEach(n=>{ if(wb[n]) part[n]=wb[n]; }); lastSrc='sheet (partial)'; acceptWorkbook(part,ok+' of '+names.length+' tabs'); return; }
+    // 3) last resort: the CSV link (first tab only)
     try{
       const text=await fetchText(SHEET_URL+'&_='+Date.now());
-      acceptWorkbook({...WB,[first]:csvDates(parseCSV(text))},null,'Hubs tab only (CSV)'); return;
+      lastSrc='published CSV (Hubs only)'; acceptWorkbook({[first]:csvDates(parseCSV(text))},'Hubs tab only (CSV)'); return;
     }catch(e){ es.push(String(e&&e.message||e)); }
     setStatus(isLive?'stale':'offline',whyFailed(es));
   } finally { loading=false; }
 }
-document.getElementById('refreshBtn').addEventListener('click',()=>{
-  loadWeb();
-});
+document.getElementById('refreshBtn').addEventListener('click',()=>{ if(driveMcp) driveRefresh(); else loadWeb(); });
 
 // ================= PNG export of the Hubs page (Canvas) =================
 function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
@@ -1002,6 +1013,7 @@ async function buildImageBlob(){
 }
 document.getElementById('downloadBtn').addEventListener('click',async()=>{
   const btn=document.getElementById('downloadBtn'), original=btn.textContent;
+  if(!D.length){ alert('Data is not loaded yet.'); return; }
   btn.disabled=true; btn.textContent='Preparing...';
   try{
     const blob=await buildImageBlob(); let saved=false;
@@ -1013,12 +1025,19 @@ document.getElementById('downloadBtn').addEventListener('click',async()=>{
 
 // ================= Start =================
 (function(){ const h=(location.hash||'').slice(1); if(PAGES.some(p=>p.key===h)||SUBS.some(x=>x.key===h)) current=h; })();
-applyWorkbook(SNAPSHOT_WB);
-(function(){ const l=loadLast(); if(l){ try{ applyWorkbook({...SNAPSHOT_WB,...l.wb}); lastRaw=JSON.stringify({...SNAPSHOT_WB,...l.wb}); setStatus('loading','last saved '+new Date(l.t).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})); }catch(e){} } })();
-loadWeb();
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadWeb(); });
-setInterval(()=>{ if(!document.hidden) loadWeb(); },REFRESH_MS);
-
+renderNav(); renderPage();
+// show the last data this browser saw while the live read is in progress
+(function(){ const l=loadLast(); if(l){ try{ lastRaw=JSON.stringify(l.wb); applyWorkbook(l.wb); setStatus('loading','showing data saved '+new Date(l.t).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})); }catch(e){} } })();
+(async()=>{
+  let mcp=null;
+  if(IN_CLAUDE){ try{ mcp=await claude.use('mcp'); }catch(e){} }
+  if(mcp) startDrive(mcp);
+  else {
+    loadWeb();
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadWeb(); });
+    setInterval(()=>{ if(!document.hidden) loadWeb(); },REFRESH_MS);
+  }
+})();
 </script>
 </body>
 </html>
