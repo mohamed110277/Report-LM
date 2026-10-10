@@ -880,6 +880,7 @@ async function driveRefresh(){
     const code=e&&e.code, msg=String(e&&e.message||e);
     if(['not_granted','server_not_connected','needs_reauth','approval_required','blocked_by_policy'].includes(code)||/not.?granted|reauth|approval|not connected/i.test(msg)) setStatus('offline','allow Google Drive access to see live data');
     else setStatus(isLive?'stale':'offline',isLive?'':msg.slice(0,80));
+    loadWeb(); // fall back to the direct / published link
   }finally{ driveBusy=false; }
 }
 function startDrive(mcp){
@@ -1031,9 +1032,16 @@ document.getElementById('downloadBtn').addEventListener('click',async()=>{
 (function(){ const h=(location.hash||'').slice(1); if(PAGES.some(p=>p.key===h)||SUBS.some(x=>x.key===h)) current=h; })();
 applyWorkbook(SNAPSHOT_WB);
 (function(){ const l=loadLast(); if(l){ try{ applyWorkbook({...SNAPSHOT_WB,...l.wb}); lastRaw=JSON.stringify({...SNAPSHOT_WB,...l.wb}); setStatus('loading','last saved '+new Date(l.t).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})); }catch(e){} } })();
-loadWeb();
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadWeb(); });
-setInterval(()=>{ if(!document.hidden) loadWeb(); },REFRESH_MS);
+(async()=>{
+  let mcp=null;
+  if(IN_CLAUDE){ try{ mcp=await claude.use('mcp'); }catch(e){} }
+  if(mcp) startDrive(mcp);   // freshest source inside claude.ai (no publish delay)
+  else {
+    loadWeb();
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadWeb(); });
+    setInterval(()=>{ if(!document.hidden) loadWeb(); },REFRESH_MS);
+  }
+})();
 
 </script>
 </body>
