@@ -891,20 +891,29 @@ function startDrive(mcp){
 
 // Path B: read each tab from Google over the web (hosted page / local file)
 function gvizDate(v){ const m=/^Date\((\d+),(\d+),(\d+)/.exec(v); return m? m[1]+'-'+String(+m[2]+1).padStart(2,'0')+'-'+String(+m[3]).padStart(2,'0') : v; }
+function respToRows(resp){
+  if(!resp||resp.status!=='ok'||!resp.table){ const er=resp&&resp.errors&&resp.errors[0]; const msg=er?String(er.reason||'')+' '+String(er.message||''):'bad response'; throw new Error(/access|denied|permission|sign/i.test(msg)?'HTTP 403':'bad response: '+msg); }
+  const rows=(resp.table.rows||[]).map(r=>{ const row=(r.c||[]).map(cell=>{ if(!cell||cell.v==null) return null; return typeof cell.v==='string'?gvizDate(cell.v):cell.v; }); while(row.length&&row[row.length-1]==null) row.pop(); return row; });
+  while(rows.length&&!rows[rows.length-1].length) rows.pop();
+  return rows;
+}
+function gvizUrl(name,extra){ return 'https://docs.google.com/spreadsheets/d/'+DRIVE_FILE_ID+'/gviz/tq?sheet='+encodeURIComponent(name)+'&headers=0&tqx='+extra+'&_='+Date.now(); }
+async function loadTabFetch(name){
+  const res=await fetch(gvizUrl(name,'out:json'),{cache:'no-store',credentials:'omit'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const t=await res.text(); const i=t.indexOf('{'), j=t.lastIndexOf('}');
+  if(i<0||j<i) throw new Error('bad response');
+  return respToRows(JSON.parse(t.slice(i,j+1)));
+}
+async function loadTab(name){ try{ return await loadTabFetch(name); }catch(e1){ try{ return await loadTabJsonp(name); }catch(e2){ throw e1; } } }
 function loadTabJsonp(name){
   return new Promise((resolve,reject)=>{
     const cb='__gv'+Date.now()+Math.floor(Math.random()*1e6), s=document.createElement('script'); let done=false,timer=null;
     const cleanup=()=>{ done=true; clearTimeout(timer); try{ delete window[cb]; }catch(e){ window[cb]=undefined; } s.remove(); };
     timer=setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('timeout')); } },10000);
-    window[cb]=resp=>{
-      if(done) return; cleanup();
-      if(!resp||resp.status!=='ok'||!resp.table){ const er=resp&&resp.errors&&resp.errors[0]; const msg=er?String(er.reason||'')+' '+String(er.message||''):'bad response'; reject(new Error(/access|denied|permission|sign/i.test(msg)?'HTTP 403':'bad response: '+msg)); return; }
-      const rows=(resp.table.rows||[]).map(r=>{ const row=(r.c||[]).map(cell=>{ if(!cell||cell.v==null) return null; return typeof cell.v==='string'?gvizDate(cell.v):cell.v; }); while(row.length&&row[row.length-1]==null) row.pop(); return row; });
-      while(rows.length&&!rows[rows.length-1].length) rows.pop();
-      resolve(rows);
-    };
+    window[cb]=resp=>{ if(done) return; cleanup(); try{ resolve(respToRows(resp)); }catch(e){ reject(e); } };
     s.onerror=()=>{ if(!done){ cleanup(); reject(new Error('script blocked')); } };
-    s.src='https://docs.google.com/spreadsheets/d/'+DRIVE_FILE_ID+'/gviz/tq?sheet='+encodeURIComponent(name)+'&headers=0&tqx=out:json;responseHandler:'+cb+'&_='+Date.now();
+    s.src=gvizUrl(name,'out:json;responseHandler:'+cb);
     document.head.appendChild(s);
   });
 }
@@ -934,10 +943,16 @@ async function loadWeb(){
   if(loading) return; loading=true; if(!isLive) setStatus('loading');
   const es=[];
   try{
-    const first=PAGES[0].sheet;
+    const first=PAGES[0].sheet, names=PAGES.map(p=>p.sheet);
+    // 0) live read of every tab straight from the sheet (always fresh, no publish delay; needs "Anyone with the link can view")
+    const res=await Promise.allSettled(names.map(nm=>loadTab(nm)));
+    const wb={}; let ok=0;
+    res.forEach((r,i)=>{ if(r.status==='fulfilled'&&r.value.length){ wb[names[i]]=r.value; ok++; } else if(r.status==='rejected') es.push(String(r.reason&&r.reason.message||r.reason)); });
+    if(ok===names.length){ acceptWorkbook({...WB,...wb},null,'live'); return; }
     // 1) the published link as xlsx: every tab, straight from the link you gave
-    try{ const x=await loadPubXlsx(); acceptWorkbook({...WB,...x},null,'published link'); return; }
+    try{ const x=await loadPubXlsx(); acceptWorkbook({...WB,...x,...wb},null,'published link (may lag a few minutes)'); return; }
     catch(e){ es.push(String(e&&e.message||e)); }
+    if(ok){ acceptWorkbook({...WB,...wb},null,ok+' of '+names.length+' tabs'); return; }
     // 2) the same link as CSV (first tab only)
     try{
       const text=await fetchText(SHEET_URL+'&_='+Date.now());
