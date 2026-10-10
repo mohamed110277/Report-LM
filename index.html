@@ -144,7 +144,6 @@ tr:last-child td{border-bottom:0;}
       <div class="topright">
         <div class="status loading" id="status"><span class="dot"></span><span id="statusText">Updating…</span></div>
         <button class="refbtn" id="refreshBtn">⟳ Refresh</button>
-        <button class="refbtn" id="fileBtn" title="Sheet → File → Download → Microsoft Excel (.xlsx), then pick it here">📂 Load .xlsx</button><input type="file" id="fileIn" accept=".xlsx,.xls" hidden>
         <button class="dlbtn" id="downloadBtn">⬇ Download image</button>
       </div>
     </div>
@@ -821,8 +820,11 @@ function setStatus(state,detail){
   const base=state==='live'?'Live':state==='loading'?'Updating…':state==='stale'?'Connection lost – showing last data':'Saved data (NOT live)';
   txt.textContent=detail?base+' – '+detail:base;
 }
+const LS_KEY='hubsPerfLastWB_v1';
+function saveLast(wb){ try{ localStorage.setItem(LS_KEY,JSON.stringify({t:Date.now(),wb})); }catch(e){} }
+function loadLast(){ try{ const o=JSON.parse(localStorage.getItem(LS_KEY)||'null'); if(o&&o.wb&&o.t) return o; }catch(e){} return null; }
 function acceptWorkbook(wb,when,partial){
-  const raw=JSON.stringify(wb);
+  const raw=JSON.stringify(wb); saveLast(wb);
   if(raw!==lastRaw){ applyWorkbook(wb); lastRaw=raw; }
   isLive=true; lastUpdate=when||new Date();
   if(PAGES.some(p=>MODEL[p.key])) renderPage();
@@ -905,7 +907,7 @@ function loadTabJsonp(name){
     document.head.appendChild(s);
   });
 }
-async function fetchText(url){ const res=await fetch(url); if(!res.ok) throw new Error('HTTP '+res.status); return res.text(); }
+async function fetchText(url){ const res=await fetch(url,{cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status); return res.text(); }
 function parseCSV(text){
   const rows=[]; let row=[],cell='',q=false;
   for(let i=0;i<text.length;i++){ const ch=text[i];
@@ -918,12 +920,12 @@ function parseCSV(text){
 }
 function whyFailed(es){
   if(es.some(e=>/^HTTP (401|403|404)/.test(e))) return 'Google refused access \u2013 in the sheet press Share and set \u201CAnyone with the link\u201D to Viewer';
-  if(es.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'could not reach the published link (blocked network, or opened inside claude.ai which blocks it) \u2013 use \u201CLoad .xlsx\u201D or host the file on your site';
+  if(es.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'could not reach the published link (blocked network, or opened inside claude.ai which blocks it) \u2013 host the file on your own site';
   return 'unexpected answer from Google';
 }
 function csvDates(rows){ return rows.map(r=>r.map(c=>{ if(typeof c!=='string') return c; const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(c.trim()); return m? m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0') : c; })); }
 async function loadPubXlsx(){
-  const res=await fetch(SHEET_URL.split('?')[0]+'?output=xlsx&_='+Date.now());
+  const res=await fetch(SHEET_URL.split('?')[0]+'?output=xlsx&_='+Date.now(),{cache:'no-store'});
   if(!res.ok) throw new Error('HTTP '+res.status);
   return xlsxToWorkbook(new Uint8Array(await res.arrayBuffer()),'array');
 }
@@ -943,12 +945,6 @@ async function loadWeb(){
     setStatus(isLive?'stale':'offline',whyFailed(es));
   } finally { loading=false; }
 }
-document.getElementById('fileBtn').addEventListener('click',()=>document.getElementById('fileIn').click());
-document.getElementById('fileIn').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f) return; const fr=new FileReader();
-  fr.onload=()=>{ try{ acceptWorkbook(xlsxToWorkbook(fr.result,'array'),new Date(),'loaded from file '+f.name); }catch(err){ setStatus('offline','could not read file: '+String(err.message||err).slice(0,60)); } e.target.value=''; };
-  fr.readAsArrayBuffer(f);
-});
 document.getElementById('refreshBtn').addEventListener('click',()=>{
   loadWeb();
 });
@@ -1018,6 +1014,7 @@ document.getElementById('downloadBtn').addEventListener('click',async()=>{
 // ================= Start =================
 (function(){ const h=(location.hash||'').slice(1); if(PAGES.some(p=>p.key===h)||SUBS.some(x=>x.key===h)) current=h; })();
 applyWorkbook(SNAPSHOT_WB);
+(function(){ const l=loadLast(); if(l){ try{ applyWorkbook({...SNAPSHOT_WB,...l.wb}); lastRaw=JSON.stringify({...SNAPSHOT_WB,...l.wb}); setStatus('loading','last saved '+new Date(l.t).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})); }catch(e){} } })();
 loadWeb();
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadWeb(); });
 setInterval(()=>{ if(!document.hidden) loadWeb(); },REFRESH_MS);
