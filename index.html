@@ -154,7 +154,7 @@ tr:last-child td{border-bottom:0;}
 
 <script>
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT0iCFywbMwN5Q-un5uhCrQ0LLNsDHwCcdOjGwx6SxPAIJoSvk__PNWHbaChmKXKnAlIZgJa16QfB4z/pub?output=csv';
-const REFRESH_MS = 30000;
+const REFRESH_MS = 20000;
 const DRIVE_FILE_ID = '1U43Cqa-S362A0QTHigdliVJixmmBICX6zOFM3Z4u_aM';
 const DRIVE_SERVER = 'Google Drive';
 const DRIVE_TOOL = 'download_file_content';
@@ -859,18 +859,30 @@ function extractB64(p){
   return '';
 }
 // Path A: Google Drive connector (inside claude.ai)
+let driveBusy=false;
+async function driveRefresh(){
+  if(!driveMcp||driveBusy) return; driveBusy=true;
+  try{
+    // same method as the Contractors Target dashboard: download the workbook with the cache switched off
+    const res=await driveMcp.callTool(DRIVE_SERVER,DRIVE_TOOL,{fileId:DRIVE_FILE_ID,exportMimeType:XLSX_MIME},{cache:{staleTime:0}});
+    let b64='';
+    const txt=(res&&res.content||[]).find(x=>x&&x.type==='text');
+    if(txt){ try{ b64=JSON.parse(txt.text).content; }catch(e){ b64=extractB64(txt.text); } }
+    if(!b64) b64=extractB64(res&&res.payload);
+    if(!b64) throw new Error('empty Google Drive answer');
+    acceptWorkbook(xlsxToWorkbook(b64),new Date());
+  }catch(e){
+    console.warn('Google Drive read failed:',e);
+    const code=e&&e.code, msg=String(e&&e.message||e);
+    if(['not_granted','server_not_connected','needs_reauth','approval_required','blocked_by_policy'].includes(code)||/not.?granted|reauth|approval|not connected/i.test(msg)) setStatus('offline','allow Google Drive access to see live data');
+    else setStatus(isLive?'stale':'offline',isLive?'':msg.slice(0,80));
+  }finally{ driveBusy=false; }
+}
 function startDrive(mcp){
   driveMcp=mcp; setStatus('loading');
-  mcp.watchTool(DRIVE_SERVER,DRIVE_TOOL,{fileId:DRIVE_FILE_ID,exportMimeType:XLSX_MIME},ev=>{
-    if(ev.type==='data'){
-      try{ acceptWorkbook(xlsxToWorkbook(extractB64(ev.result.payload)), ev.result.cache?new Date(ev.result.cache.storedAt):new Date()); }
-      catch(e){ console.warn('Could not read the sheet:',e); setStatus(isLive?'stale':'offline','could not read the sheet'); }
-    } else {
-      const code=ev.error&&ev.error.code; console.warn('Google Drive read failed:',ev.error);
-      if(['not_granted','server_not_connected','needs_reauth','approval_required','blocked_by_policy'].includes(code)) setStatus('offline','allow Google Drive access to see live data');
-      else setStatus(isLive?'stale':'offline');
-    }
-  },{refetchInterval:REFRESH_MS});
+  driveRefresh();
+  setInterval(()=>{ if(!document.hidden) driveRefresh(); },REFRESH_MS);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) driveRefresh(); });
 }
 
 // Path B: read each tab from Google over the web (hosted page / local file)
@@ -937,7 +949,7 @@ async function loadWeb(){
   } finally { loading=false; }
 }
 document.getElementById('refreshBtn').addEventListener('click',()=>{
-  if(driveMcp){ setStatus('loading'); driveMcp.invalidate(DRIVE_SERVER,DRIVE_TOOL).catch(()=>{}); }
+  if(driveMcp){ setStatus('loading'); driveRefresh(); }
   else if(!IN_CLAUDE) loadWeb();
 });
 
