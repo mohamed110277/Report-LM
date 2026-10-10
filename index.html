@@ -825,13 +825,13 @@ function acceptWorkbook(wb,when,partial){
   if(raw!==lastRaw){ applyWorkbook(wb); lastRaw=raw; }
   isLive=true; lastUpdate=when||new Date();
   if(PAGES.some(p=>MODEL[p.key])) renderPage();
-  setStatus('live',partial||'');
+  setStatus('live','checked '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})+(partial?' \u00B7 '+partial:''));
 }
 
 // Convert an xlsx file (base64) to {tabName: rows[][]}
-function xlsxToWorkbook(b64){
+function xlsxToWorkbook(b64,type){
   if(typeof XLSX==='undefined') throw new Error('spreadsheet reader did not load');
-  const book=XLSX.read(b64,{type:'base64'}); const out={};
+  const book=XLSX.read(b64,{type:type||'base64'}); const out={};
   book.SheetNames.forEach(name=>{
     const ws=book.Sheets[name]; if(!ws['!ref']){ out[name]=[]; return; }
     const rg=XLSX.utils.decode_range(ws['!ref']); const rows=[];
@@ -879,7 +879,7 @@ function loadTabJsonp(name){
   return new Promise((resolve,reject)=>{
     const cb='__gv'+Date.now()+Math.floor(Math.random()*1e6), s=document.createElement('script'); let done=false,timer=null;
     const cleanup=()=>{ done=true; clearTimeout(timer); try{ delete window[cb]; }catch(e){ window[cb]=undefined; } s.remove(); };
-    timer=setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('timeout')); } },15000);
+    timer=setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('timeout')); } },10000);
     window[cb]=resp=>{
       if(done) return; cleanup();
       if(!resp||resp.status!=='ok'||!resp.table){ const er=resp&&resp.errors&&resp.errors[0]; const msg=er?String(er.reason||'')+' '+String(er.message||''):'bad response'; reject(new Error(/access|denied|permission|sign/i.test(msg)?'HTTP 403':'bad response: '+msg)); return; }
@@ -904,23 +904,34 @@ function parseCSV(text){
   return rows.map(r=>{ r=r.map(c=>c===''?null:c); while(r.length&&r[r.length-1]==null) r.pop(); return r; });
 }
 function whyFailed(es){
-  if(es.some(e=>/^HTTP (401|403)/.test(e))) return 'sheet is not shared (set it to anyone with the link can view)';
-  if(es.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'cannot reach docs.google.com from this page (network, firewall or site policy)';
+  if(es.some(e=>/^HTTP (401|403|404)/.test(e))) return 'Google refused access \u2013 in the sheet press Share and set \u201CAnyone with the link\u201D to Viewer';
+  if(es.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'Google did not answer \u2013 set the sheet to \u201CAnyone with the link can view\u201D (Share), or check network/firewall';
   return 'unexpected answer from Google';
+}
+function csvDates(rows){ return rows.map(r=>r.map(c=>{ if(typeof c!=='string') return c; const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(c.trim()); return m? m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0') : c; })); }
+async function loadPubXlsx(){
+  const res=await fetch(SHEET_URL.split('?')[0]+'?output=xlsx&_='+Date.now());
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return xlsxToWorkbook(new Uint8Array(await res.arrayBuffer()),'array');
 }
 async function loadWeb(){
   if(loading) return; loading=true; if(!isLive) setStatus('loading');
   const es=[];
   try{
     const names=PAGES.map(p=>p.sheet);
+    // 1) live read of every tab straight from the sheet (needs "Anyone with the link can view")
     const res=await Promise.allSettled(names.map(nm=>loadTabJsonp(nm)));
     const wb={}; let ok=0;
     res.forEach((r,i)=>{ if(r.status==='fulfilled'&&r.value.length){ wb[names[i]]=r.value; ok++; } else if(r.status==='rejected') es.push(String(r.reason&&r.reason.message||r.reason)); });
-    if(ok){ const merged={...WB,...wb}; acceptWorkbook(merged,null,ok<names.length?ok+' of '+names.length+' tabs':''); return; }
-    // fallback: published CSV (first tab only)
+    if(ok===names.length){ acceptWorkbook({...WB,...wb},null,''); return; }
+    // 2) the published-to-web workbook (all tabs, Google refreshes it with a delay of a few minutes)
+    try{ const x=await loadPubXlsx(); acceptWorkbook({...WB,...x,...wb},null,'published link (may lag a few minutes)'); return; }
+    catch(e){ es.push(String(e&&e.message||e)); }
+    if(ok){ acceptWorkbook({...WB,...wb},null,ok+' of '+names.length+' tabs'); return; }
+    // 3) published CSV (first tab only)
     try{
       const text=await fetchText(SHEET_URL+'&_='+Date.now());
-      acceptWorkbook({...WB,[names[0]]:parseCSV(text)},null,'Hubs tab only'); return;
+      acceptWorkbook({...WB,[names[0]]:csvDates(parseCSV(text))},null,'Hubs tab only \u2013 '+whyFailed(es)); return;
     }catch(e){ es.push(String(e&&e.message||e)); }
     setStatus(isLive?'stale':'offline',whyFailed(es));
   } finally { loading=false; }
