@@ -130,6 +130,7 @@ tr:last-child td{border-bottom:0;}
   .nav .cnt{display:none;}
   .main{padding:20px 16px 50px;}
 }
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -142,8 +143,8 @@ tr:last-child td{border-bottom:0;}
         <p class="sub" id="subtitle"></p>
       </div>
       <div class="topright">
-        <div class="status loading" id="status"><span class="dot"></span><span id="statusText">Updating…</span></div>
-        <button class="refbtn" id="refreshBtn">⟳ Refresh</button>
+        <div class="status loading" id="status" hidden><span class="dot"></span><span id="statusText">Updating…</span></div>
+        <button class="refbtn" id="refreshBtn" hidden>⟳ Refresh</button>
         <button class="dlbtn" id="downloadBtn">⬇ Download image</button>
       </div>
     </div>
