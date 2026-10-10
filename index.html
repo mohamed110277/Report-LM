@@ -912,7 +912,7 @@ async function loadTab(name){
   tops.forEach((t,i)=>{
     if(t.status!=='fulfilled'||!t.value[0]) return;
     const fix=t.value[0]; const row=rows[i]||(rows[i]=[]);
-    for(let j=0;j<fix.length;j++){ if((row[j]==null||row[j]==='') && fix[j]!=null) row[j]=fix[j]; }
+    for(let j=0;j<fix.length;j++){ if(fix[j]!=null && fix[j]!=='') row[j]=fix[j]; }  // single-row value is always the true one (full-tab value may be null or a date turned into a number)
   });
   return rows.map(r=>{ r=Array.from(r,v=>v===undefined?null:v); while(r.length&&r[r.length-1]==null) r.pop(); return r; });
 }
