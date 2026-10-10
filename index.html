@@ -918,7 +918,7 @@ function parseCSV(text){
 }
 function whyFailed(es){
   if(es.some(e=>/^HTTP (401|403|404)/.test(e))) return 'Google refused access \u2013 in the sheet press Share and set \u201CAnyone with the link\u201D to Viewer';
-  if(es.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'Google did not answer \u2013 set the sheet to \u201CAnyone with the link can view\u201D (Share), or check network/firewall';
+  if(es.every(e=>/Failed to fetch|script blocked|timeout|NetworkError|Load failed/i.test(e))) return 'could not reach the published link (blocked network, or opened inside claude.ai which blocks it) \u2013 use \u201CLoad .xlsx\u201D or host the file on your site';
   return 'unexpected answer from Google';
 }
 function csvDates(rows){ return rows.map(r=>r.map(c=>{ if(typeof c!=='string') return c; const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(c.trim()); return m? m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0') : c; })); }
@@ -931,20 +931,14 @@ async function loadWeb(){
   if(loading) return; loading=true; if(!isLive) setStatus('loading');
   const es=[];
   try{
-    const names=PAGES.map(p=>p.sheet);
-    // 1) live read of every tab straight from the sheet (needs "Anyone with the link can view")
-    const res=await Promise.allSettled(names.map(nm=>loadTabJsonp(nm)));
-    const wb={}; let ok=0;
-    res.forEach((r,i)=>{ if(r.status==='fulfilled'&&r.value.length){ wb[names[i]]=r.value; ok++; } else if(r.status==='rejected') es.push(String(r.reason&&r.reason.message||r.reason)); });
-    if(ok===names.length){ acceptWorkbook({...WB,...wb},null,''); return; }
-    // 2) the published-to-web workbook (all tabs, Google refreshes it with a delay of a few minutes)
-    try{ const x=await loadPubXlsx(); acceptWorkbook({...WB,...x,...wb},null,'published link (may lag a few minutes)'); return; }
+    const first=PAGES[0].sheet;
+    // 1) the published link as xlsx: every tab, straight from the link you gave
+    try{ const x=await loadPubXlsx(); acceptWorkbook({...WB,...x},null,'published link'); return; }
     catch(e){ es.push(String(e&&e.message||e)); }
-    if(ok){ acceptWorkbook({...WB,...wb},null,ok+' of '+names.length+' tabs'); return; }
-    // 3) published CSV (first tab only)
+    // 2) the same link as CSV (first tab only)
     try{
       const text=await fetchText(SHEET_URL+'&_='+Date.now());
-      acceptWorkbook({...WB,[names[0]]:csvDates(parseCSV(text))},null,'Hubs tab only \u2013 '+whyFailed(es)); return;
+      acceptWorkbook({...WB,[first]:csvDates(parseCSV(text))},null,'Hubs tab only (CSV)'); return;
     }catch(e){ es.push(String(e&&e.message||e)); }
     setStatus(isLive?'stale':'offline',whyFailed(es));
   } finally { loading=false; }
@@ -956,8 +950,7 @@ document.getElementById('fileIn').addEventListener('change',e=>{
   fr.readAsArrayBuffer(f);
 });
 document.getElementById('refreshBtn').addEventListener('click',()=>{
-  if(driveMcp){ setStatus('loading'); driveRefresh(); }
-  else if(!IN_CLAUDE) loadWeb();
+  loadWeb();
 });
 
 // ================= PNG export of the Hubs page (Canvas) =================
@@ -1025,16 +1018,10 @@ document.getElementById('downloadBtn').addEventListener('click',async()=>{
 // ================= Start =================
 (function(){ const h=(location.hash||'').slice(1); if(PAGES.some(p=>p.key===h)||SUBS.some(x=>x.key===h)) current=h; })();
 applyWorkbook(SNAPSHOT_WB);
-(async()=>{
-  if(IN_CLAUDE){
-    let mcp=null; try{ mcp=await claude.use('mcp'); }catch(e){}
-    if(mcp) startDrive(mcp); else setStatus('offline','sign in to claude.ai to see live data');
-  } else {
-    loadWeb();
-    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadWeb(); });
-    setInterval(()=>{ if(!document.hidden) loadWeb(); },REFRESH_MS);
-  }
-})();
+loadWeb();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadWeb(); });
+setInterval(()=>{ if(!document.hidden) loadWeb(); },REFRESH_MS);
+
 </script>
 </body>
 </html>
