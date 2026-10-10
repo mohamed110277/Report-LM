@@ -146,7 +146,7 @@ tr:last-child td{border-bottom:0;}
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT0iCFywbMwN5Q-un5uhCrQ0LLNsDHwCcdOjGwx6SxPAIJoSvk__PNWHbaChmKXKnAlIZgJa16QfB4z/pub?output=csv';
 // Sheet ID (used for the instant "live" read; the sheet must be shared as "Anyone with the link: Viewer")
 const DRIVE_FILE_ID = '1U43Cqa-S362A0QTHigdliVJixmmBICX6zOFM3Z4u_aM';
-const REFRESH_MS = 20000;
+const REFRESH_MS = 30000;
 const DRIVE_SERVER = 'Google Drive';
 const DRIVE_TOOL = 'download_file_content';
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -892,50 +892,38 @@ function respToRows(resp){
   while(rows.length&&!rows[rows.length-1].length) rows.pop();
   return rows;
 }
-function gvizUrl(name,extra){ return 'https://docs.google.com/spreadsheets/d/'+DRIVE_FILE_ID+'/gviz/tq?sheet='+encodeURIComponent(name)+'&headers=0&tqx='+extra+'&_='+Date.now(); }
-async function loadTabFetch(name){
-  const res=await fetch(gvizUrl(name,'out:json'),{cache:'no-store',credentials:'omit'});
+function gvizUrl(name,extra,range){ return 'https://docs.google.com/spreadsheets/d/'+DRIVE_FILE_ID+'/gviz/tq?sheet='+encodeURIComponent(name)+(range?'&range='+encodeURIComponent(range):'')+'&headers=0&tqx='+extra+'&_='+Date.now()+Math.floor(Math.random()*1e6); }
+async function loadTabFetch(name,range){
+  const res=await fetch(gvizUrl(name,'out:json',range),{cache:'no-store',credentials:'omit'});
   if(!res.ok) throw new Error('HTTP '+res.status);
   const t=await res.text(); const i=t.indexOf('{'), j=t.lastIndexOf('}');
   if(i<0||j<i) throw new Error('bad response');
   return respToRows(JSON.parse(t.slice(i,j+1)));
 }
-// CSV keeps every cell (text headers included); the JSON format drops text cells that sit in number columns
-async function loadTabCsv(name){
-  const res=await fetch(gvizUrl(name,'out:csv'),{cache:'no-store',credentials:'omit'});
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  const t=await res.text();
-  if(/^\s*</.test(t)) throw new Error('HTTP 403');   // Google sent an HTML sign-in page
-  return csvDates(parseCSV(t));
-}
-async function loadTabJson(name){ try{ return await loadTabFetch(name); }catch(e1){ try{ return await loadTabJsonp(name); }catch(e2){ throw e1; } } }
-// JSON has exact numbers/dates but drops some text cells; CSV has the text. Take JSON and fill its empty cells from CSV.
-function mergeRows(jr,cr){
-  const n=Math.max(jr.length,cr.length), out=[];
-  for(let i=0;i<n;i++){
-    const a=jr[i]||[], b=cr[i]||[], w=Math.max(a.length,b.length), row=[];
-    for(let j=0;j<w;j++){ const v=a[j]; row.push((v==null||v==='') && b[j]!=null ? b[j] : (v==null?null:v)); }
-    while(row.length&&row[row.length-1]==null) row.pop();
-    out.push(row);
-  }
-  while(out.length&&!out[out.length-1].length) out.pop();
-  return out;
-}
+// JSONP first (works from any website); plain fetch as a fallback
+async function loadTabJson(name,range){ try{ return await loadTabJsonp(name,range); }catch(e1){ try{ return await loadTabFetch(name,range); }catch(e2){ throw e1; } } }
+// Google drops text/date cells that sit in a column of mostly numbers. A single-row request has no such conflict,
+// so the top rows (headers, dates, totals) are requested one by one and used to fill the gaps of the full tab.
+const TOP_ROWS=6;
 async function loadTab(name){
-  const [c,j]=await Promise.allSettled([loadTabCsv(name),loadTabJson(name)]);
-  const cv=c.status==='fulfilled'?c.value:null, jv=j.status==='fulfilled'?j.value:null;
-  if(cv&&jv) return mergeRows(jv,cv);
-  if(jv) return jv; if(cv) return cv;
-  throw (c.reason||j.reason);
+  const full=await loadTabJson(name);
+  const tops=await Promise.allSettled(Array.from({length:TOP_ROWS},(_,i)=>loadTabJson(name,'A'+(i+1)+':AZ'+(i+1))));
+  const rows=full.map(r=>r.slice());
+  tops.forEach((t,i)=>{
+    if(t.status!=='fulfilled'||!t.value[0]) return;
+    const fix=t.value[0]; const row=rows[i]||(rows[i]=[]);
+    for(let j=0;j<fix.length;j++){ if((row[j]==null||row[j]==='') && fix[j]!=null) row[j]=fix[j]; }
+  });
+  return rows.map(r=>{ r=Array.from(r,v=>v===undefined?null:v); while(r.length&&r[r.length-1]==null) r.pop(); return r; });
 }
-function loadTabJsonp(name){
+function loadTabJsonp(name,range){
   return new Promise((resolve,reject)=>{
     const cb='__gv'+Date.now()+Math.floor(Math.random()*1e6), s=document.createElement('script'); let done=false,timer=null;
     const cleanup=()=>{ done=true; clearTimeout(timer); try{ delete window[cb]; }catch(e){ window[cb]=undefined; } s.remove(); };
     timer=setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('timeout')); } },10000);
     window[cb]=resp=>{ if(done) return; cleanup(); try{ resolve(respToRows(resp)); }catch(e){ reject(e); } };
     s.onerror=()=>{ if(!done){ cleanup(); reject(new Error('script blocked')); } };
-    s.src=gvizUrl(name,'out:json;responseHandler:'+cb);
+    s.src=gvizUrl(name,'out:json;responseHandler:'+cb,range);
     document.head.appendChild(s);
   });
 }
