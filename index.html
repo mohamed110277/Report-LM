@@ -445,7 +445,8 @@ function go(k){ current=k; try{ history.replaceState(null,'','#'+k); }catch(e){}
 
 // ================= Pages =================
 function setSubtitle(t){ document.getElementById('subtitle').textContent=t; }
-function stamp(){ return isLive && lastUpdate ? 'Updated '+lastUpdate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : 'Saved snapshot'; }
+let lastSrc='', lastStatusText='';
+function stamp(){ return isLive && lastUpdate ? 'Updated '+(new Date()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})+(lastSrc?' \u00B7 '+lastSrc:'') : 'Saved data \u00B7 '+(lastStatusText||'connecting\u2026'); }
 function renderPage(){
   CH.length=0; hideTip();
   const sub=SUBS.find(x=>x.key===current), mk=sub?'hubs':current;
@@ -819,7 +820,7 @@ function setStatus(state,detail){
   const el=document.getElementById('status'), txt=document.getElementById('statusText');
   el.className='status '+state;
   const base=state==='live'?'Live':state==='loading'?'Updating…':state==='stale'?'Connection lost – showing last data':'Saved data (NOT live)';
-  txt.textContent=detail?base+' – '+detail:base;
+  txt.textContent=detail?base+' – '+detail:base; lastStatusText=txt.textContent; try{ const st=document.getElementById('subtitle'); if(st && !isLive) st.textContent=st.textContent.replace(/ \u2022 (Saved snapshot|Saved data.*)$/,'')+' \u2022 '+stamp(); }catch(e){}
 }
 const LS_KEY='hubsPerfLastWB_v1';
 function saveLast(wb){ try{ localStorage.setItem(LS_KEY,JSON.stringify({t:Date.now(),wb})); }catch(e){} }
@@ -874,7 +875,7 @@ async function driveRefresh(){
     if(txt){ try{ b64=JSON.parse(txt.text).content; }catch(e){ b64=extractB64(txt.text); } }
     if(!b64) b64=extractB64(res&&res.payload);
     if(!b64) throw new Error('empty Google Drive answer');
-    acceptWorkbook(xlsxToWorkbook(b64),new Date());
+    lastSrc='Google Drive'; acceptWorkbook(xlsxToWorkbook(b64),new Date());
   }catch(e){
     console.warn('Google Drive read failed:',e);
     const code=e&&e.code, msg=String(e&&e.message||e);
@@ -949,15 +950,15 @@ async function loadWeb(){
     const res=await Promise.allSettled(names.map(nm=>loadTab(nm)));
     const wb={}; let ok=0;
     res.forEach((r,i)=>{ if(r.status==='fulfilled'&&r.value.length){ wb[names[i]]=r.value; ok++; } else if(r.status==='rejected') es.push(String(r.reason&&r.reason.message||r.reason)); });
-    if(ok===names.length){ acceptWorkbook({...WB,...wb},null,'live'); return; }
+    if(ok===names.length){ lastSrc='sheet (direct)'; acceptWorkbook({...WB,...wb},null,'live'); return; }
     // 1) the published link as xlsx: every tab, straight from the link you gave
-    try{ const x=await loadPubXlsx(); acceptWorkbook({...WB,...x,...wb},null,'published link (may lag a few minutes)'); return; }
+    try{ const x=await loadPubXlsx(); lastSrc='published link (delayed)'; acceptWorkbook({...WB,...x,...wb},null,'published link (may lag a few minutes)'); return; }
     catch(e){ es.push(String(e&&e.message||e)); }
     if(ok){ acceptWorkbook({...WB,...wb},null,ok+' of '+names.length+' tabs'); return; }
     // 2) the same link as CSV (first tab only)
     try{
       const text=await fetchText(SHEET_URL+'&_='+Date.now());
-      acceptWorkbook({...WB,[first]:csvDates(parseCSV(text))},null,'Hubs tab only (CSV)'); return;
+      lastSrc='published CSV (Hubs only)'; acceptWorkbook({...WB,[first]:csvDates(parseCSV(text))},null,'Hubs tab only (CSV)'); return;
     }catch(e){ es.push(String(e&&e.message||e)); }
     setStatus(isLive?'stale':'offline',whyFailed(es));
   } finally { loading=false; }
