@@ -325,13 +325,15 @@ function drawLine(el,c){
   const vals=c.series.flatMap(s=>s.values.filter(fin));
   if(!vals.length){ el.innerHTML='<p class="cap">No data</p>'; return; }
   let lo=Math.min(...vals), hi=Math.max(...vals); if(c.zero) lo=Math.min(0,lo);
-  const ticks=niceTicks(lo,hi); lo=ticks[0]; hi=ticks[ticks.length-1];
+  let ticks=niceTicks(lo,hi); lo=ticks[0]; hi=ticks[ticks.length-1];
+  if(c.multi){ ticks=[0,25,50,75,100]; lo=0; hi=100; }
   const f=c.fmt||fmt;
-  m.l=Math.max(48,14+6.4*Math.max(...ticks.map(t=>f(t).length)));
+  m.l=c.multi?14:Math.max(48,14+6.4*Math.max(...ticks.map(t=>f(t).length)));
+  if(c.multi){ m.t=34; m.r=14; }
   const iw=W-m.l-m.r, ih=H-m.t-m.b;
   const X=i=>m.l+(n<2?iw/2:i*iw/(n-1)), Y=v=>m.t+ih-(v-lo)/((hi-lo)||1)*ih;
   let g='';
-  ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/><text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="var(--sub)">${esc(f(t))}</text>`; });
+  ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/>${c.multi?'':`<text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="var(--sub)">${esc(f(t))}</text>`}`; });
   (c.allLabels?labelsEvery(n,iw):xlabelIdx(n,iw)).forEach(i=>{ g+=`<text x="${X(i)}" y="${H-9}" text-anchor="middle" font-size="11" fill="var(--sub)">${esc(c.labels[i])}</text>`; });
   c.series.forEach(s=>{
     let d='',open=false;
@@ -339,13 +341,19 @@ function drawLine(el,c){
     g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"${s.dashed?' stroke-dasharray="6 5"':''}/>`;
     if(!s.dashed && n<=24) s.values.forEach((v,i)=>{ if(fin(v)) g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="${s.color}" stroke="var(--card)" stroke-width="1.5"/>`; });
   });
+  if(c.multi){
+    const L=[]; c.series.forEach(s=>{ let l=-1; s.values.forEach((v,i)=>{ if(fin(v)) l=i; }); if(l>=0) L.push({s,l,y:Y(s.values[l])-10}); });
+    L.sort((p,q)=>p.y-q.y);
+    for(let i=1;i<L.length;i++){ if(L[i].y-L[i-1].y<16) L[i].y=L[i-1].y+16; }   // keep labels from overlapping
+    L.forEach(o=>{ const sf=o.s.fmt||fmt; g+=`<text x="${Math.min(X(o.l),W-m.r)-8}" y="${o.y}" text-anchor="end" font-size="12" font-weight="700" fill="${o.s.color}" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(sf(o.s.raw[o.l]))}</text>`; });
+  }
   const ls=c.series.find(s=>!s.dashed)||c.series[0]; let li=-1; ls.values.forEach((v,i)=>{ if(fin(v)) li=i; });
   if(c.allLabels){
     const sm=iw/Math.max(1,n-1)<46, fs=sm?10:12;
     ls.values.forEach((v,i)=>{ if(!fin(v)) return; const txt=f(v);
       g+=`<text x="${X(i)}" y="${Y(v)-10}" text-anchor="${i===0&&n>1?'start':(i===n-1&&n>1?'end':'middle')}" font-size="${fs}" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(txt)}</text>`; });
   }
-  else if(li>=0 && c.endLabel!==false){ g+=`<text x="${Math.min(X(li),W-m.r)}" y="${Y(ls.values[li])-12}" text-anchor="${li>n-3?'end':'middle'}" font-size="12" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(ls.values[li]))}</text>`; }
+  else if(!c.multi && li>=0 && c.endLabel!==false){ g+=`<text x="${Math.min(X(li),W-m.r)}" y="${Y(ls.values[li])-12}" text-anchor="${li>n-3?'end':'middle'}" font-size="12" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(ls.values[li]))}</text>`; }
   g+=`<line class="cx" x1="0" x2="0" y1="${m.t}" y2="${m.t+ih}" stroke="var(--sub)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>`;
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(c.title||'chart')}">${g}<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/></svg>`;
   const svg=el.querySelector('svg'), cx=svg.querySelector('.cx');
@@ -354,7 +362,7 @@ function drawLine(el,c){
     const i=Math.max(0,Math.min(n-1,Math.round((p.clientX-r.left-m.l)/(iw||1)*(n-1))));
     cx.setAttribute('x1',X(i)); cx.setAttribute('x2',X(i)); cx.setAttribute('visibility','visible');
     let h=`<b>${esc(c.labels[i])}</b>`;
-    c.series.forEach(s=>{ if(fin(s.values[i])) h+=`<br><i style="background:${s.color}"></i>${esc(s.name)}: <b>${esc(f(s.values[i]))}</b>`; });
+    c.series.forEach(s=>{ if(fin(s.values[i])) h+=`<br><i style="background:${s.color}"></i>${esc(s.name)}: <b>${esc(c.multi?(s.fmt||fmt)(s.raw[i]):f(s.values[i]))}</b>`; });
     showTip(h,p.clientX,p.clientY);
   };
   svg.addEventListener('mousemove',move); svg.addEventListener('touchstart',move,{passive:true}); svg.addEventListener('touchmove',move,{passive:true});
@@ -653,10 +661,7 @@ function pgAcq(m){
   const rows=hubs.map(h=>`<tr><td>${esc(h.name)}</td>${h.daily.map(v=>heatCell(v,0,mx,v?String(v):'·')).join('')}<td><b>${fmt(h.month)}</b></td><td>${spark(h.daily)}</td></tr>`).join('');
   return `<div class="kpis">
     ${kpi('Month total',fmt(t.month),active+' hubs contributed','var(--blue)')}
-    ${kpi('Latest day',fmt(lastV),dl(m.dates[n-1]),'var(--green)')}
-    ${kpi('Average / day',(avg).toFixed(1),n+' days recorded','var(--sub)')}
-    ${kpi('Best day',fmt(t.daily[bi]),dl(m.dates[bi]),'var(--orange)')}
-    ${kpi('No hires on latest day',fmt(quiet),'of '+hubs.length+' hubs','var(--red)')}</div>
+    ${kpi('Highest ACQ',fmt(t.daily[bi]),'<b style="font-size:15px;color:var(--ink)">'+dl(m.dates[bi])+'</b>','var(--green)')}</div>
   <div class="grid2">
     <div class="panel"><h2>Acquisition per day</h2><p class="cap">Total new stars across all hubs</p>${chart('bars',{labels:m.dates.map(dl),values:t.daily,name:'New stars',color:'var(--blue)',height:260,title:'Acquisition per day'})}</div>
     <div class="panel"><h2>Top hubs this month</h2><p class="cap">Highest month-to-date acquisition</p>${hbars(top)}</div>
@@ -671,6 +676,7 @@ function pgAcq(m){
 }
 
 // ---- Last 15 days ----
+function mkS(name,arr,color){ const v=arr.filter(fin), lo=Math.min(...v), hi=Math.max(...v); return {name,color,raw:arr,values:arr.map(x=>fin(x)?(hi>lo?(x-lo)/(hi-lo)*100:50):NaN)}; }
 function pgDays(m){
   const n=m.dates.length, labels=m.dates.map(dl);
   const lv=a=>{ for(let i=a.length-1;i>=0;i--) if(fin(a[i])) return {v:a[i],i}; return {v:NaN,i:-1}; };
@@ -691,11 +697,9 @@ function pgDays(m){
     ${kpi('OFD',fmt(of.v),labels[of.i]+' • peak '+fmt(ofp.v),'var(--green)')}
     ${kpi('Total Bosta',fmt(tb.v),labels[tb.i],'var(--blue)')}
     ${kpi('Best OFD/Star',fmt(osp.v),labels[osp.i],'var(--orange)')}</div>
-  <div class="grid3">
-    <div class="panel"><h2>OFD / Star</h2><p class="cap">Orders per active star</p>${chart('line',{labels,series:[{name:'OFD/Star',color:'var(--red)',values:m.ofdStar}],height:210,title:'OFD per star'})}</div>
-    <div class="panel"><h2>OFD</h2><p class="cap">Orders out for delivery</p>${chart('line',{labels,series:[{name:'OFD',color:'var(--green)',values:m.ofd}],height:210,title:'OFD'})}</div>
-    <div class="panel"><h2>Total Bosta active</h2><p class="cap">Active stars</p>${chart('line',{labels,series:[{name:'Active',color:'var(--blue)',values:m.bosta}],height:210,title:'Total Bosta active'})}</div>
-  </div>
+  <div class="panel" style="margin-bottom:16px"><h2>OFD/Star, OFD and Total Bosta together</h2><p class="cap">Each line is scaled to its own range (lowest = bottom, highest = top) so the three trends can be compared. Hover to see the real numbers.</p>
+    <div class="legend"><span><i style="background:var(--red)"></i>OFD / Star</span><span><i style="background:var(--green)"></i>OFD</span><span><i style="background:var(--blue)"></i>Total Bosta active</span></div>
+    ${chart('line',{multi:true,labels,series:[mkS('OFD/Star',m.ofdStar,'var(--red)'),mkS('OFD',m.ofd,'var(--green)'),mkS('Total Bosta',m.bosta,'var(--blue)')],height:340,title:'OFD/Star, OFD and Total Bosta'})}</div>
   ${insights([
     `Latest OFD/Star is <b>${fmt(os.v)}</b> (${labels[os.i]}); the 15-day peak was <b>${fmt(osp.v)}</b> on ${labels[osp.i]}.`,
     `OFD peaked at <b>${fmt(ofp.v)}</b> on ${labels[ofp.i]}; latest is ${fmt(of.v)} (${signed((of.v-ofp.v)/ofp.v*100,1)}% vs peak).`,
