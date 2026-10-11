@@ -316,10 +316,11 @@ function mountCharts(){
     if(c.type==='line') drawLine(el,c.cfg); else drawBars(el,c.cfg);
   });
 }
+function labelsEvery(n,iw){ const gap=iw/Math.max(1,n-1); return gap>=34? Array.from({length:n},(_,i)=>i) : xlabelIdx(n,iw,34); }
 function xlabelIdx(n,iw,minGap=58){ const k=Math.max(1,Math.ceil(minGap/(iw/Math.max(1,n-1||1)))); const out=[]; for(let i=0;i<n;i+=k) out.push(i); return out; }
 
 function drawLine(el,c){
-  const W=Math.max(260,el.clientWidth||600), H=c.height||230, m={l:48,r:18,t:16,b:30};
+  const W=Math.max(260,el.clientWidth||600), H=c.height||230, m={l:48,r:c.allLabels?26:18,t:c.allLabels?30:16,b:30};
   const n=c.labels.length;
   const vals=c.series.flatMap(s=>s.values.filter(fin));
   if(!vals.length){ el.innerHTML='<p class="cap">No data</p>'; return; }
@@ -331,7 +332,7 @@ function drawLine(el,c){
   const X=i=>m.l+(n<2?iw/2:i*iw/(n-1)), Y=v=>m.t+ih-(v-lo)/((hi-lo)||1)*ih;
   let g='';
   ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/><text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="var(--sub)">${esc(f(t))}</text>`; });
-  xlabelIdx(n,iw).forEach(i=>{ g+=`<text x="${X(i)}" y="${H-9}" text-anchor="middle" font-size="11" fill="var(--sub)">${esc(c.labels[i])}</text>`; });
+  (c.allLabels?labelsEvery(n,iw):xlabelIdx(n,iw)).forEach(i=>{ g+=`<text x="${X(i)}" y="${H-9}" text-anchor="middle" font-size="11" fill="var(--sub)">${esc(c.labels[i])}</text>`; });
   c.series.forEach(s=>{
     let d='',open=false;
     s.values.forEach((v,i)=>{ if(fin(v)){ d+=(open?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1); open=true; } else open=false; });
@@ -339,7 +340,12 @@ function drawLine(el,c){
     if(!s.dashed && n<=24) s.values.forEach((v,i)=>{ if(fin(v)) g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="${s.color}" stroke="var(--card)" stroke-width="1.5"/>`; });
   });
   const ls=c.series.find(s=>!s.dashed)||c.series[0]; let li=-1; ls.values.forEach((v,i)=>{ if(fin(v)) li=i; });
-  if(li>=0 && c.endLabel!==false){ g+=`<text x="${Math.min(X(li),W-m.r)}" y="${Y(ls.values[li])-12}" text-anchor="${li>n-3?'end':'middle'}" font-size="12" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(ls.values[li]))}</text>`; }
+  if(c.allLabels){
+    const sm=iw/Math.max(1,n-1)<46, fs=sm?10:12;
+    ls.values.forEach((v,i)=>{ if(!fin(v)) return; const txt=f(v);
+      g+=`<text x="${X(i)}" y="${Y(v)-10}" text-anchor="${i===0&&n>1?'start':(i===n-1&&n>1?'end':'middle')}" font-size="${fs}" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(txt)}</text>`; });
+  }
+  else if(li>=0 && c.endLabel!==false){ g+=`<text x="${Math.min(X(li),W-m.r)}" y="${Y(ls.values[li])-12}" text-anchor="${li>n-3?'end':'middle'}" font-size="12" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(ls.values[li]))}</text>`; }
   g+=`<line class="cx" x1="0" x2="0" y1="${m.t}" y2="${m.t+ih}" stroke="var(--sub)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>`;
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(c.title||'chart')}">${g}<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/></svg>`;
   const svg=el.querySelector('svg'), cx=svg.querySelector('.cx');
@@ -538,14 +544,14 @@ function pgSideOfd(t){
     ${kpi('Total OFD',fmt(TO),rows.length+' hubs','var(--green)')}
     ${kpi('Active stars',fmt(TA),'sum of hubs','var(--blue)')}
     ${kpi('OFD / Star',ratio.toFixed(1),'OFD \u00F7 active stars'+(fin(sheetOps)?' \u2022 sheet shows '+fmt(sheetOps):''),'var(--red)')}
-    ${kpi('Highest',fmt(top[0].ops),esc(top[0].name),'var(--orange)')}
-    ${kpi('Lowest',fmt(bot[0].ops),esc(bot[0].name),'var(--sub)')}</div>
+    ${kpi('Highest OFD/Star',fmt(top[0].ops),'<b style="font-size:17px;color:var(--ink)">'+esc(top[0].name)+'</b>','var(--orange)')}
+    ${kpi('Lowest OFD/Star',fmt(bot[0].ops),'<b style="font-size:17px;color:var(--ink)">'+esc(bot[0].name)+'</b>','var(--sub)')}</div>
   <div class="grid2">
     <div class="panel"><h2>Highest OFD/Star</h2><p class="cap">Top 10 hubs</p>${hbars(top.map(r=>({label:r.name,v:r.ops,color:'var(--green)'})),{max:mx})}</div>
     <div class="panel"><h2>Lowest OFD/Star</h2><p class="cap">Bottom 10 hubs</p>${hbars(bot.map(r=>({label:r.name,v:r.ops,color:'var(--red)'})),{max:mx})}</div>
   </div>
   <div class="grid2">
-    <div class="panel"><h2>How hubs are spread</h2><p class="cap">Number of hubs per OFD/Star range</p>${chart('bars',{labels,values:cnt,name:'Hubs',color:'var(--blue)',height:230,title:'Distribution of OFD per star'})}</div>
+    <div class="panel"><h2>How hubs are spread</h2><p class="cap">Number of hubs per OFD/Star range</p>${chart('bars',{labels:[...labels].reverse(),values:[...cnt].reverse(),name:'Hubs',color:'var(--blue)',height:230,title:'Distribution of OFD per star'})}</div>
     ${insights([
       `Network OFD is <b>${fmt(TO)}</b> from <b>${fmt(TA)}</b> active stars \u2013 about <b>${ratio.toFixed(1)}</b> orders per star.`,
       `Best: <b>${esc(top[0].name)}</b> (${top[0].ops}), ${esc(top[1].name)} (${top[1].ops}), ${esc(top[2].name)} (${top[2].ops}).`,
@@ -567,7 +573,6 @@ function pgSideStars(t){
   const cnt=bucketBars(rows.map(r=>r.stars),edges,labels);
   return `<div class="kpis">
     ${kpi('Total stars',fmt(T),(fin(t.sum[0])&&t.sum[0]!==T?'sheet shows '+fmt(t.sum[0]):rows.length+' hubs'),'var(--blue)')}
-    ${kpi('Average / hub',avg.toFixed(1),'median '+med,'var(--sub)')}
     ${kpi('Largest hub',fmt(top[0].stars),esc(top[0].name),'var(--green)')}
     ${kpi('Smallest hub',fmt(bot[0].stars),esc(bot[0].name),'var(--orange)')}
     ${kpi('Top 10 share',top10.toFixed(0)+'%','of all stars','var(--red)')}</div>
@@ -626,7 +631,7 @@ function pgBosta(pts){
     ${kpi('Lowest',fmt(low.v),dl(low.d),'var(--orange)')}
     ${kpi('Average',fmt(Math.round(avg)),pts.length+' days recorded','var(--sub)')}</div>
   <div class="grid2">
-    <div class="panel"><h2>Active stars per day</h2><p class="cap">Hover a point for the exact value</p>${chart('line',{labels:pts.map(p=>dl(p.d)),series:[{name:'Active',color:'var(--blue)',values:pts.map(p=>p.v)}],height:260,title:'Active stars per day'})}</div>
+    <div class="panel"><h2>Active stars per day</h2><p class="cap">Hover a point for the exact value</p>${chart('line',{labels:pts.map(p=>dl(p.d)),series:[{name:'Active',color:'var(--blue)',values:pts.map(p=>p.v)}],height:280,allLabels:true,title:'Active stars per day'})}</div>
     <div class="panel"><h2>Daily change</h2><p class="cap">Difference from the previous recorded day</p>${chart('bars',{labels:pts.slice(1).map(p=>dl(p.d)),values:diffs,name:'Change',fmt:v=>signed(v),colorFn:v=>v>=0?'var(--green)':'var(--red)',height:260,title:'Daily change'})}</div>
   </div>
   ${insights([
