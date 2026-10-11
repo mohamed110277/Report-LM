@@ -313,7 +313,7 @@ function chart(type,cfg){ CH.push({type,cfg}); return `<div class="chart" data-i
 function mountCharts(){
   document.querySelectorAll('#page .chart').forEach(el=>{
     const c=CH[+el.dataset.i]; if(!c) return;
-    if(c.type==='line') drawLine(el,c.cfg); else drawBars(el,c.cfg);
+    if(c.type==='line') drawLine(el,c.cfg); else if(c.type==='lanes') drawLanes(el,c.cfg); else drawBars(el,c.cfg);
   });
 }
 function labelsEvery(n,iw){ const gap=iw/Math.max(1,n-1); return gap>=34? Array.from({length:n},(_,i)=>i) : xlabelIdx(n,iw,34); }
@@ -365,6 +365,42 @@ function drawLine(el,c){
     c.series.forEach(s=>{ if(fin(s.values[i])) h+=`<br><i style="background:${s.color}"></i>${esc(s.name)}: <b>${esc(c.multi?(s.fmt||fmt)(s.raw[i]):f(s.values[i]))}</b>`; });
     showTip(h,p.clientX,p.clientY);
   };
+  svg.addEventListener('mousemove',move); svg.addEventListener('touchstart',move,{passive:true}); svg.addEventListener('touchmove',move,{passive:true});
+  svg.addEventListener('mouseleave',()=>{ cx.setAttribute('visibility','hidden'); hideTip(); });
+}
+
+
+// One chart, stacked lanes: every series keeps its own scale, so each day's number can be shown without overlapping.
+function drawLanes(el,c){
+  const W=Math.max(300,el.clientWidth||700), k=c.series.length, n=c.labels.length;
+  const m={l:14,r:22,t:6,b:30}, laneH=c.laneHeight||112, H=m.t+m.b+k*laneH;
+  const iw=W-m.l-m.r, X=i=>m.l+(n<2?iw/2:i*iw/(n-1));
+  const fs=iw/Math.max(1,n-1)<46?10:12;
+  let g='';
+  c.series.forEach((s,j)=>{
+    const top=m.t+j*laneH, padT=34, padB=12, ih=laneH-padT-padB;
+    const v=s.values.filter(fin); const lo=Math.min(...v), hi=Math.max(...v);
+    const Y=x=>top+padT+ih-(hi>lo?(x-lo)/(hi-lo):0.5)*ih;
+    const f=s.fmt||fmt;
+    if(j>0) g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${top}" y2="${top}" stroke="var(--grid)" stroke-width="1"/>`;
+    g+=`<text x="${m.l}" y="${top+17}" font-size="13" font-weight="800" fill="${s.color}">${esc(s.name)}</text>`;
+    let d='',open=false;
+    s.values.forEach((x,i)=>{ if(fin(x)){ d+=(open?'L':'M')+X(i).toFixed(1)+' '+Y(x).toFixed(1); open=true; } else open=false; });
+    g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    s.values.forEach((x,i)=>{ if(!fin(x)) return;
+      g+=`<circle cx="${X(i)}" cy="${Y(x)}" r="3" fill="${s.color}" stroke="var(--card)" stroke-width="1.5"/>`;
+      g+=`<text x="${X(i)}" y="${Y(x)-9}" text-anchor="${i===0&&n>1?'start':(i===n-1&&n>1?'end':'middle')}" font-size="${fs}" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(x))}</text>`; });
+  });
+  const every=iw/Math.max(1,n-1)>=34?1:Math.ceil(34/(iw/Math.max(1,n-1)));
+  for(let i=0;i<n;i+=every) g+=`<text x="${X(i)}" y="${H-9}" text-anchor="${i===0?'start':'middle'}" font-size="11" fill="var(--sub)">${esc(c.labels[i])}</text>`;
+  g+=`<line class="cx" x1="0" x2="0" y1="${m.t}" y2="${H-m.b}" stroke="var(--sub)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>`;
+  el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(c.title||'chart')}">${g}<rect x="${m.l}" y="${m.t}" width="${iw}" height="${H-m.t-m.b}" fill="transparent"/></svg>`;
+  const svg=el.querySelector('svg'), cx=svg.querySelector('.cx');
+  const move=ev=>{ const r=svg.getBoundingClientRect(), p=(ev.touches?ev.touches[0]:ev);
+    const i=Math.max(0,Math.min(n-1,Math.round((p.clientX-r.left-m.l)/(iw||1)*(n-1))));
+    cx.setAttribute('x1',X(i)); cx.setAttribute('x2',X(i)); cx.setAttribute('visibility','visible');
+    let h=`<b>${esc(c.labels[i])}</b>`; c.series.forEach(s=>{ if(fin(s.values[i])) h+=`<br><i style="background:${s.color}"></i>${esc(s.name)}: <b>${esc((s.fmt||fmt)(s.values[i]))}</b>`; });
+    showTip(h,p.clientX,p.clientY); };
   svg.addEventListener('mousemove',move); svg.addEventListener('touchstart',move,{passive:true}); svg.addEventListener('touchmove',move,{passive:true});
   svg.addEventListener('mouseleave',()=>{ cx.setAttribute('visibility','hidden'); hideTip(); });
 }
@@ -693,13 +729,12 @@ function pgDays(m){
     return `<div class="tw maxh"><table><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
   };
   return `<div class="kpis">
-    ${kpi('OFD / Star',fmt(os.v),labels[os.i]+' • avg '+avgOs.toFixed(1),'var(--red)')}
     ${kpi('OFD',fmt(of.v),labels[of.i]+' • peak '+fmt(ofp.v),'var(--green)')}
     ${kpi('Total Bosta',fmt(tb.v),labels[tb.i],'var(--blue)')}
+    ${kpi('OFD / Star',fmt(os.v),labels[os.i]+' • avg '+avgOs.toFixed(1),'var(--red)')}
     ${kpi('Best OFD/Star',fmt(osp.v),labels[osp.i],'var(--orange)')}</div>
-  <div class="panel" style="margin-bottom:16px"><h2>OFD/Star, OFD and Total Bosta together</h2><p class="cap">Each line is scaled to its own range (lowest = bottom, highest = top) so the three trends can be compared. Hover to see the real numbers.</p>
-    <div class="legend"><span><i style="background:var(--red)"></i>OFD / Star</span><span><i style="background:var(--green)"></i>OFD</span><span><i style="background:var(--blue)"></i>Total Bosta active</span></div>
-    ${chart('line',{multi:true,labels,series:[mkS('OFD/Star',m.ofdStar,'var(--red)'),mkS('OFD',m.ofd,'var(--green)'),mkS('Total Bosta',m.bosta,'var(--blue)')],height:340,title:'OFD/Star, OFD and Total Bosta'})}</div>
+  <div class="panel" style="margin-bottom:16px"><h2>OFD, Total Bosta and OFD/Star</h2><p class="cap">Daily trend with every day's number. Each line has its own scale.</p>
+    ${chart('lanes',{labels,series:[{name:'OFD',color:'var(--green)',values:m.ofd},{name:'Total Bosta',color:'var(--blue)',values:m.bosta},{name:'OFD/Star',color:'var(--red)',values:m.ofdStar}],title:'OFD, Total Bosta and OFD/Star'})}</div>
   ${insights([
     `Latest OFD/Star is <b>${fmt(os.v)}</b> (${labels[os.i]}); the 15-day peak was <b>${fmt(osp.v)}</b> on ${labels[osp.i]}.`,
     `OFD peaked at <b>${fmt(ofp.v)}</b> on ${labels[ofp.i]}; latest is ${fmt(of.v)} (${signed((of.v-ofp.v)/ofp.v*100,1)}% vs peak).`,
