@@ -78,9 +78,16 @@ h1{font-size:23px;margin:0 0 4px;}
 .insights li::before{content:"";position:absolute;inset-inline-start:0;top:.55em;width:7px;height:7px;border-radius:50%;background:var(--blue);}
 .hb{display:grid;grid-template-columns:minmax(90px,150px) minmax(0,1fr) auto;align-items:center;gap:10px;padding:5px 0;font-size:13px;}
 .hb .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
+.hb .nm small{display:block;font-weight:400;font-size:11px;color:var(--sub);}
 .hb .tr{height:10px;background:var(--track);border-radius:6px;overflow:hidden;display:flex;gap:2px;}
 .hb .tr i{display:block;height:100%;}
 .hb .vl{font-variant-numeric:tabular-nums;font-weight:700;text-align:end;font-size:12.5px;white-space:nowrap;}
+.hb2{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:5px 10px;padding:7px 0;font-size:13px;}
+.hb2 .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hb2 .nm small{font-weight:400;font-size:11.5px;color:var(--sub);margin-inline-start:4px;}
+.hb2 .vl{font-variant-numeric:tabular-nums;font-weight:700;font-size:12.5px;white-space:nowrap;text-align:end;}
+.hb2 .tr{grid-column:1 / -1;height:10px;background:var(--track);border-radius:6px;overflow:hidden;display:flex;gap:2px;}
+.hb2 .tr i{display:block;height:100%;}
 .tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card);}
 table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums;}
 th,td{padding:8px 10px;text-align:end;white-space:nowrap;border-bottom:1px solid var(--line);}
@@ -763,7 +770,7 @@ function groupBy(hubs,key){
 }
 function sbars(groups){
   return groups.map(g=>{ const ach=g.target-g.missing, p=g.target?Math.max(0,Math.min(100,ach/g.target*100)):0;
-    return `<div class="hb" data-tip="<b>${esc(g.label)}</b><br>Target ${fmt(g.target)}<br>Achieved ${fmt(ach)} (${p.toFixed(0)}%)<br>Missing ${fmt(g.missing)}<br>${g.hubs} hubs"><div class="nm">${esc(g.label)}</div><div class="tr"><i style="width:${p}%;background:var(--green)"></i><i style="width:${100-p}%;background:var(--red);opacity:.55"></i></div><div class="vl">${p.toFixed(0)}% • <span class="dn">−${fmt(g.missing)}</span></div></div>`; }).join('');
+    return `<div class="hb2" data-tip="<b>${esc(g.label)}</b><br>${g.hubs} hubs<br>Target ${fmt(g.target)}<br>Achieved ${fmt(ach)} (${p.toFixed(0)}%)<br>Missing ${fmt(g.missing)}"><div class="nm">${esc(g.label)} <small>${g.hubs} hubs</small></div><div class="vl">${p.toFixed(0)}% \u2022 Target ${fmt(g.target)} \u2022 <span class="dn">\u2212${fmt(g.missing)}</span></div><div class="tr"><i style="width:${p}%;background:var(--green)"></i><i style="width:${100-p}%;background:var(--red);opacity:.55"></i></div></div>`; }).join('');
 }
 function pgTarget(m){
   const hubs=m.hubs, T=sum(hubs.map(h=>h.target)), M=sum(hubs.map(h=>h.missing)), A=T-M, pct=A/T*100;
