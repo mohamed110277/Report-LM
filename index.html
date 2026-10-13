@@ -110,19 +110,36 @@ tr:last-child td{border-bottom:0;}
 .sortbtn{border:1px solid var(--line);background:var(--card);color:var(--sub);padding:8px 14px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;}
 .sortbtn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+.gc{background:linear-gradient(160deg,#1f2530,#151a22);color:#eef1f6;border-radius:16px;padding:14px;border:1px solid #2c3442;position:relative;overflow:hidden;box-shadow:0 8px 20px rgba(20,25,35,.22);min-width:0;}
+.gc::after{content:"";position:absolute;right:-30px;top:-30px;width:90px;height:90px;border-radius:50%;background:var(--c);opacity:.25;filter:blur(18px);pointer-events:none;}
+.gc .gn{display:flex;align-items:center;gap:5px;font-size:12px;color:#9aa6b8;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;}
+.gc .gn .pin{width:12px;height:12px;flex:none;}
+.gc .gb{font-size:34px;font-weight:800;margin:8px 0 0;line-height:1;font-variant-numeric:tabular-nums;color:#fff;}
+.gc .gcap{font-size:11.5px;color:#5fd6a6;font-weight:700;margin-top:2px;}
+.gc .gseg{display:flex;gap:3px;margin:12px 0 7px;}
+.gc .gseg i{flex:1;height:5px;border-radius:3px;background:#2d3544;}
+.gc .gseg i.on{background:var(--c);}
+.gc .gt{display:flex;justify-content:space-between;gap:6px;font-size:11.5px;color:#9aa6b8;flex-wrap:wrap;}
+.gc .gt b{color:#fff;font-size:13px;}
+.gc .gt em{font-style:normal;color:#ff7a8a;font-weight:700;}
+.gc .gt em.ok{color:#5fd6a6;}
+.gc .gg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:11px;}
+.gc .gg div{background:#262d3a;border-radius:9px;padding:6px 8px;font-size:10px;color:#9aa6b8;min-width:0;}
+.gc .gg b{display:block;font-size:14px;color:#fff;font-variant-numeric:tabular-nums;}
+.gc .gg .hi{background:var(--hc);color:#12161d;font-weight:600;}
+.gc .gg .hi b{color:#12161d;}
 @media (min-width:1100px){
   .cards{grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;}
-  .cards .hcard{padding:11px 11px 12px;border-radius:10px;}
-  .cards .hcard .name{font-size:11px;}
-  .cards .hcard .big{font-size:23px;margin-top:6px;}
-  .cards .hcard .capt{font-size:11.5px;}
-  .cards .pct-row{font-size:11px;}
-  .cards .pct-row b{font-size:12.5px;}
-  .cards .bar{margin:8px 0 7px;}
-  .cards .mini{gap:6px;margin-top:8px;}
-  .cards .mini div{padding:6px 7px;}
-  .cards .mini b{font-size:13px;}
-  .cards .mini span{font-size:10px;}
+  .gc{padding:11px 11px 12px;border-radius:13px;}
+  .gc .gn{font-size:11px;}
+  .gc .gb{font-size:27px;}
+  .gc .gcap{font-size:10.5px;}
+  .gc .gseg{margin:10px 0 6px;}
+  .gc .gt{font-size:10.5px;}.gc .gt b{font-size:12px;}
+  .gc .gg{gap:5px;margin-top:9px;}
+  .gc .gg div{padding:5px 6px;font-size:9px;}
+  .gc .gg b{font-size:12.5px;}
+}
 }
 .hcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
 .hcard .name{display:flex;align-items:center;gap:5px;font-weight:700;font-size:12px;color:var(--sub);}
@@ -548,20 +565,20 @@ function renderPage(){
 
 // ---- Hubs ----
 function ofdColor(val,mn=ofdMin,mx=ofdMax){ const t=(val-mn)/((mx-mn)||1); const hue=(1-t)*120; return {bg:`hsl(${hue},70%,90%)`,fg:`hsl(${hue},65%,28%)`}; }
+function ofdSolid(val,mn=ofdMin,mx=ofdMax){ const t=(val-mn)/((mx-mn)||1); return `hsl(${(1-t)*120},62%,52%)`; }
 function hcard(d){
-  const missing=d.target-d.active, activePct=d.target?Math.round(d.active/d.target*1000)/10:0;
-  const bw=Math.min(Math.max(activePct,0),100), bc=activePct>=80?'var(--green)':activePct>=50?'var(--orange)':'var(--red)';
-  const c=ofdColor(d.ofdPerStar);
-  return `<div class="hcard">
-    <div class="name"><svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(d.hub)}</div>
-    <div class="big">${fmt(d.active)}</div><div class="capt">Active stars</div>
-    <div class="pct-row"><b>Target ${fmt(d.target)}</b><span class="miss ${missing<=0?'good':''}">${missing>0?'-'+fmt(missing)+' missing':'Target exceeded'}</span></div>
-    <div class="bar"><i style="width:${bw}%;background:${bc}"></i></div>
-    <div class="mini">
-      <div><b>${fmt(d.stars)}</b><span>Total stars</span></div>
-      <div><b>${fmt(d.ofd)}</b><span>OFD</span></div>
-      <div><b>${fmt(d.absence)}</b><span>Absence &bull; ${esc(d.absencePct)}</span></div>
-      <div style="background:${c.bg};color:${c.fg}"><b style="color:${c.fg}">${fmt(d.ofdPerStar)}</b><span style="color:${c.fg}">OFD/Star</span></div>
+  const missing=d.target-d.active, pct=d.target?d.active/d.target*100:0;
+  const sc=pct>=80?'#1a9c6b':pct>=50?'#e08a1f':'#d1394a', on=Math.max(0,Math.min(10,Math.round(pct/10)));
+  return `<div class="gc" style="--c:${sc}">
+    <div class="gn"><svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(d.hub)}</div>
+    <div class="gb">${fmt(d.active)}</div><div class="gcap">Active stars</div>
+    <div class="gseg">${Array.from({length:10},(_,i)=>`<i class="${i<on?'on':''}"></i>`).join('')}</div>
+    <div class="gt"><span>Target <b>${fmt(d.target)}</b></span>${missing>0?`<em>-${fmt(missing)} missing</em>`:`<em class="ok">Target exceeded</em>`}</div>
+    <div class="gg">
+      <div><b>${fmt(d.stars)}</b>Total stars</div>
+      <div><b>${fmt(d.ofd)}</b>OFD</div>
+      <div><b>${fmt(d.absence)}</b>Absence \u2022 ${esc(d.absencePct)}</div>
+      <div class="hi" style="--hc:${ofdSolid(d.ofdPerStar)}"><b>${fmt(d.ofdPerStar)}</b>OFD/Star</div>
     </div></div>`;
 }
 function setHubs(hubs,totals){
@@ -1092,27 +1109,31 @@ function drawPinIcon(ctx,cx,cy,r,color){
   ctx.beginPath(); ctx.arc(cx,cy,r*0.36,0,Math.PI*2); ctx.stroke(); ctx.restore();
 }
 function drawCard(ctx,d,x,y,w,h){
-  ctx.fillStyle='#eceef1'; roundRect(ctx,x,y,w,h,10); ctx.fill();
-  ctx.strokeStyle='#cdd1d8'; ctx.lineWidth=1; roundRect(ctx,x,y,w,h,10); ctx.stroke();
-  let px=x+18, py=y+30;
-  ctx.textAlign='left'; ctx.fillStyle='#68707d'; ctx.font='700 14px Segoe UI, Arial';
-  drawPinIcon(ctx,px+6,py-9,6,'#68707d'); ctx.fillText(fitText(ctx,d.hub,w-58),px+18,py);
-  py+=40; ctx.fillStyle='#1c1f26'; ctx.font='800 32px Segoe UI, Arial'; ctx.fillText(fmt(d.active),px,py);
-  py+=22; ctx.fillStyle='#1a9c6b'; ctx.font='700 15px Segoe UI, Arial'; ctx.fillText('Active stars',px,py);
-  py+=26; const missing=d.target-d.active;
-  ctx.fillStyle='#1c1f26'; ctx.font='700 15px Segoe UI, Arial'; ctx.fillText('Target '+fmt(d.target),px,py);
-  ctx.textAlign='right'; ctx.fillStyle=missing>0?'#d1394a':'#1a9c6b'; ctx.font='700 14px Segoe UI, Arial';
+  const missing=d.target-d.active, pct=d.target?d.active/d.target*100:0;
+  const sc=pct>=80?'#1a9c6b':pct>=50?'#e08a1f':'#d1394a', on=Math.max(0,Math.min(10,Math.round(pct/10)));
+  ctx.save(); ctx.shadowColor='rgba(20,25,35,.28)'; ctx.shadowBlur=18; ctx.shadowOffsetY=6;
+  const gr=ctx.createLinearGradient(x,y,x+w*0.6,y+h); gr.addColorStop(0,'#1f2530'); gr.addColorStop(1,'#151a22');
+  ctx.fillStyle=gr; roundRect(ctx,x,y,w,h,18); ctx.fill(); ctx.restore();
+  ctx.save(); roundRect(ctx,x,y,w,h,18); ctx.clip();
+  const rg=ctx.createRadialGradient(x+w-6,y+4,0,x+w-6,y+4,92); rg.addColorStop(0,sc+'55'); rg.addColorStop(1,sc+'00'); ctx.fillStyle=rg; ctx.fillRect(x,y,w,h); ctx.restore();
+  ctx.strokeStyle='#2c3442'; ctx.lineWidth=1; roundRect(ctx,x+0.5,y+0.5,w-1,h-1,18); ctx.stroke();
+  const px=x+18, iw=w-36; let py=y+32; ctx.textAlign='left';
+  ctx.fillStyle='#9aa6b8'; ctx.font='700 14px Segoe UI, Arial'; drawPinIcon(ctx,px+6,py-9,6,'#9aa6b8'); ctx.fillText(fitText(ctx,d.hub,w-58),px+18,py);
+  py+=46; ctx.fillStyle='#ffffff'; ctx.font='800 44px Segoe UI, Arial'; ctx.fillText(fmt(d.active),px,py);
+  py+=24; ctx.fillStyle='#5fd6a6'; ctx.font='700 14px Segoe UI, Arial'; ctx.fillText('Active stars',px,py);
+  py+=18; const gap=4, sw=(iw-gap*9)/10;
+  for(let i=0;i<10;i++){ ctx.fillStyle=i<on?sc:'#2d3544'; roundRect(ctx,px+i*(sw+gap),py,sw,7,3.5); ctx.fill(); }
+  py+=30; ctx.font='400 14px Segoe UI, Arial'; ctx.fillStyle='#9aa6b8'; ctx.fillText('Target ',px,py);
+  const tw=ctx.measureText('Target ').width; ctx.fillStyle='#ffffff'; ctx.font='700 16px Segoe UI, Arial'; ctx.fillText(fmt(d.target),px+tw,py);
+  ctx.textAlign='right'; ctx.font='700 14px Segoe UI, Arial'; ctx.fillStyle=missing>0?'#ff7a8a':'#5fd6a6';
   ctx.fillText(missing>0?'-'+fmt(missing)+' missing':'Target exceeded',x+w-18,py); ctx.textAlign='left';
-  const barY=py+12, barW=w-36; ctx.fillStyle='#dde0e6'; roundRect(ctx,px,barY,barW,8,4); ctx.fill();
-  const pct=Math.max(0,Math.min(1,d.active/d.target)); ctx.fillStyle=pct>=0.8?'#1a9c6b':pct>=0.5?'#e08a1f':'#d1394a';
-  if(pct>0){ roundRect(ctx,px,barY,Math.max(barW*pct,8),8,4); ctx.fill(); }
-  py=barY+34; const miniW=(w-36-10)/2, miniH=52, oc=ofdColor(d.ofdPerStar);
-  [{v:fmt(d.stars),l:'Total stars',bg:'#dde0e6',fg:'#1c1f26'},{v:fmt(d.ofd),l:'OFD',bg:'#dde0e6',fg:'#1c1f26'},
-   {v:fmt(d.absence),l:'Absence • '+d.absencePct,bg:'#dde0e6',fg:'#1c1f26'},{v:fmt(d.ofdPerStar),l:'OFD/Star',bg:oc.bg,fg:oc.fg}].forEach((m,i)=>{
-    const mx=px+(i%2)*(miniW+10), my=py+Math.floor(i/2)*(miniH+10);
-    ctx.fillStyle=m.bg; roundRect(ctx,mx,my,miniW,miniH,8); ctx.fill();
-    ctx.fillStyle=m.fg; ctx.font='700 16px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m.v,miniW-20),mx+11,my+23);
-    ctx.font='400 12px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m.l,miniW-20),mx+11,my+40); });
+  py+=18; const mw=(iw-10)/2, mh=54;
+  const mn=ofdMin, mx=ofdMax, t=(d.ofdPerStar-mn)/((mx-mn)||1), solid=`hsl(${(1-t)*120},62%,52%)`;
+  [{v:fmt(d.stars),l:'Total stars'},{v:fmt(d.ofd),l:'OFD'},{v:fmt(d.absence),l:'Absence \u2022 '+d.absencePct},{v:fmt(d.ofdPerStar),l:'OFD/Star',hi:1}].forEach((m,i)=>{
+    const mx0=px+(i%2)*(mw+10), my=py+Math.floor(i/2)*(mh+10);
+    ctx.fillStyle=m.hi?solid:'#262d3a'; roundRect(ctx,mx0,my,mw,mh,11); ctx.fill();
+    ctx.fillStyle=m.hi?'#12161d':'#ffffff'; ctx.font='700 19px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m.v,mw-22),mx0+12,my+25);
+    ctx.fillStyle=m.hi?'#12161d':'#9aa6b8'; ctx.font=(m.hi?'600':'400')+' 12px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m.l,mw-22),mx0+12,my+43); });
 }
 async function buildImageBlob(){
   const cols=7, cardW=280, cardH=304, gap=18, pad=32, headerH=206;
