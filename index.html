@@ -1135,38 +1135,54 @@ function drawCard(ctx,d,x,y,w,h){
     ctx.fillStyle=m.hi?'#12161d':'#ffffff'; ctx.font='700 19px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m.v,mw-22),mx0+12,my+25);
     ctx.fillStyle=m.hi?'#12161d':'#9aa6b8'; ctx.font=(m.hi?'600':'400')+' 12px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m.l,mw-22),mx0+12,my+43); });
 }
-async function buildImageBlob(){
-  const cols=7, cardW=280, cardH=304, gap=18, pad=32, headerH=206;
-  const list=currentSorted.length?currentSorted:D, rows=Math.ceil(list.length/cols);
+const PER_IMAGE=28;   // cards per downloaded image (4 rows x 7)
+async function buildImageBlob(part,parts){
+  part=part||0; parts=parts||1;
+  const cols=7, cardW=280, cardH=304, gap=18, pad=32;
+  const all=currentSorted.length?currentSorted:D;
+  const list=parts>1 ? (part===0 ? all.slice(0,PER_IMAGE) : all.slice(PER_IMAGE)) : all;   // image 1 = first 28 cards, image 2 = all the rest
+  const first=part===0, headerH=first?206:84, rows=Math.ceil(list.length/cols);
   const width=pad*2+cols*cardW+(cols-1)*gap, height=headerH+pad+rows*(cardH+gap);
   // as sharp as the browser allows: up to 4x, but never past the canvas limits (16k px per side, ~200M pixels)
   let scale=4; while(scale>1 && (width*scale>15000 || height*scale>15000 || width*scale*height*scale>2e8)) scale-=0.25;
   const canvas=document.createElement('canvas'); canvas.width=Math.round(width*scale); canvas.height=Math.round(height*scale);
   const ctx=canvas.getContext('2d'); ctx.scale(scale,scale);
   ctx.fillStyle='#dcdfe4'; ctx.fillRect(0,0,width,height);
-  ctx.fillStyle='#1c1f26'; ctx.font='700 23px Segoe UI, Arial'; ctx.fillText('Fleet (ACQ)-LM',pad,38);
-  ctx.fillStyle='#68707d'; ctx.font='400 13px Segoe UI, Arial'; ctx.fillText(document.getElementById('subtitle').textContent,pad,58);
-  const kW=(width-pad*2-(kpis.length-1)*10)/kpis.length, kpiH=100;
-  kpis.forEach((k,i)=>{ const x=pad+i*(kW+10), y=74;
-    ctx.fillStyle='#eceef1'; roundRect(ctx,x,y,kW,kpiH,10); ctx.fill(); ctx.strokeStyle='#cdd1d8'; roundRect(ctx,x,y,kW,kpiH,10); ctx.stroke();
-    ctx.fillStyle=k.c; ctx.fillRect(x,y,5,kpiH); ctx.textAlign='left';
-    ctx.fillStyle='#1a9c6b'; ctx.font='800 20px Segoe UI, Arial'; ctx.fillText(fitText(ctx,k.label,kW-24),x+16,y+36);
-    ctx.fillStyle='#1c1f26'; ctx.font='700 30px Segoe UI, Arial'; ctx.fillText(k.val,x+16,y+78); });
+  ctx.fillStyle='#1c1f26'; ctx.font='700 23px Segoe UI, Arial'; ctx.textAlign='left';
+  ctx.fillText('Fleet (ACQ)-LM'+(parts>1?'  \u2022  Part '+(part+1)+' of '+parts:''),pad,38);
+  ctx.fillStyle='#68707d'; ctx.font='400 13px Segoe UI, Arial';
+  const from=part===0?1:PER_IMAGE+1; ctx.fillText(parts>1 ? 'Hubs '+from+'\u2013'+(from+list.length-1)+' of '+all.length+'  \u2022  '+document.getElementById('subtitle').textContent : document.getElementById('subtitle').textContent,pad,58);
+  if(first){
+    const kW=(width-pad*2-(kpis.length-1)*10)/kpis.length, kpiH=100;
+    kpis.forEach((k,i)=>{ const x=pad+i*(kW+10), y=74;
+      ctx.fillStyle='#eceef1'; roundRect(ctx,x,y,kW,kpiH,10); ctx.fill(); ctx.strokeStyle='#cdd1d8'; roundRect(ctx,x,y,kW,kpiH,10); ctx.stroke();
+      ctx.fillStyle=k.c; ctx.fillRect(x,y,5,kpiH); ctx.textAlign='left';
+      ctx.fillStyle='#1a9c6b'; ctx.font='800 20px Segoe UI, Arial'; ctx.fillText(fitText(ctx,k.label,kW-24),x+16,y+36);
+      ctx.fillStyle='#1c1f26'; ctx.font='700 30px Segoe UI, Arial'; ctx.fillText(k.val,x+16,y+78); });
+  }
   list.forEach((d,i)=>{ drawCard(ctx,d,pad+(i%cols)*(cardW+gap),headerH+Math.floor(i/cols)*(cardH+gap),cardW,cardH); });
   return await new Promise(res=>canvas.toBlob(res,'image/png'));
+}
+async function saveBlob(blob,filename){
+  try{ if(typeof claude!=='undefined'&&claude.use){ const downloads=await claude.use('downloads'); if(downloads){ await downloads.save({filename,data:blob}); return; } } }catch(e){}
+  const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),8000);
 }
 document.getElementById('downloadBtn').addEventListener('click',async()=>{
   const btn=document.getElementById('downloadBtn'), original=btn.textContent;
   if(!D.length){ alert('Data is not loaded yet.'); return; }
-  btn.disabled=true; btn.textContent='Preparing...';
+  btn.disabled=true;
   try{
-    const blob=await buildImageBlob(); let saved=false;
-    try{ if(typeof claude!=='undefined'&&claude.use){ const downloads=await claude.use('downloads'); if(downloads){ btn.textContent='Saving...'; await downloads.save({filename:'hubs-dashboard.png',data:blob}); saved=true; } } }catch(e){}
-    if(!saved){ const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download='hubs-dashboard.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); }
+    const total=(currentSorted.length?currentSorted:D).length, parts=total>PER_IMAGE?2:1;   // two images: first 28 cards, then the rest
+    for(let i=0;i<parts;i++){
+      btn.textContent=parts>1?'Preparing '+(i+1)+'/'+parts+'...':'Preparing...';
+      const blob=await buildImageBlob(i,parts);
+      if(!blob) throw new Error('image too large');
+      await saveBlob(blob, parts>1?'hubs-dashboard-part'+(i+1)+'.png':'hubs-dashboard.png');
+      if(i<parts-1) await new Promise(r=>setTimeout(r,700));   // let the browser accept the next download
+    }
   }catch(e){ console.error(e); alert('Could not generate the image. Please try again.'); }
   finally{ btn.disabled=false; btn.textContent=original; }
 });
-
 
 // favicon (tab logo): lit 2s, dim 0.45s, forever. The timing runs in a Web Worker, which browsers do not slow down
 // in background tabs, so the logo keeps blinking while you are on another tab (the dashboard tab only has to stay open).
