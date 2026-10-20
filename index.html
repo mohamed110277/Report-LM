@@ -474,7 +474,7 @@ function drawBars(el,c){
     if(!fin(v)) return;
     const col=c.colorFn?c.colorFn(v,i):c.color, y0=Y(0), y1=Y(v), top=Math.min(y0,y1), h=Math.max(2,Math.abs(y0-y1));
     g+=`<rect x="${x}" y="${top}" width="${bw}" height="${h}" rx="3" fill="${col}" data-tip="<b>${esc(c.labels[i])}</b><br>${esc(c.name||'Value')}: <b>${esc(f(v))}</b>"/>`;
-    if(n<=14 && bw>=18) g+=`<text x="${x+bw/2}" y="${(v>=0?top-5:top+h+13)}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${esc(f(v))}</text>`;
+    if(band>=18) g+=`<text x="${x+bw/2}" y="${(v>=0?top-5:top+h+13)}" text-anchor="middle" font-size="${band>=38?11:(band>=26?10:9)}" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(v))}</text>`;   // value on every bar, above positive and below negative
   });
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(c.title||'chart')}">${g}</svg>`;
 }
