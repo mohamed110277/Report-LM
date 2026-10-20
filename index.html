@@ -84,6 +84,19 @@ h1{font-size:23px;margin:0 0 4px;}
 .hb .tr{height:10px;background:var(--track);border-radius:6px;overflow:hidden;display:flex;gap:2px;}
 .hb .tr i{display:block;height:100%;}
 .hb .vl{font-variant-numeric:tabular-nums;font-weight:700;text-align:end;font-size:12.5px;white-space:nowrap;}
+.gaps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(var(--rows,20),auto);grid-auto-flow:column;column-gap:44px;}   /* read down the left column (1-20), then the right (21-40) */
+@media (max-width:980px){ .gaps{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-flow:row;} }
+@media (max-width:560px){ .gr{grid-template-columns:22px minmax(70px,108px) minmax(0,1fr) 64px;gap:8px;} .gr .vl small{display:none;} }
+.gr{display:grid;grid-template-columns:24px minmax(80px,150px) minmax(0,1fr) 78px;align-items:center;gap:10px;padding:6px 6px;border-radius:9px;}
+.gr:hover{background:var(--hover);}
+.gr .rk{font-size:11.5px;font-weight:700;color:var(--sub);text-align:center;font-variant-numeric:tabular-nums;}
+.gr.top .rk{background:var(--red);color:#fff;width:22px;height:22px;line-height:22px;border-radius:50%;}
+.gr .nm{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gr .tr{height:10px;background:var(--track);border-radius:8px;overflow:hidden;}
+.gr .tr i{display:block;height:100%;border-radius:8px;}
+.gr .vl{text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.gr .vl b{font-size:14px;font-weight:800;}
+.gr .vl small{font-size:11px;color:var(--sub);margin-inline-start:3px;}
 .hb2{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:5px 10px;padding:7px 0;font-size:13px;}
 .hb2 .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .hb2 .nm small{font-weight:400;font-size:11.5px;color:var(--sub);margin-inline-start:4px;}
@@ -365,7 +378,7 @@ function chart(type,cfg){ CH.push({type,cfg}); return `<div class="chart" data-i
 function mountCharts(){
   document.querySelectorAll('#page .chart').forEach(el=>{
     const c=CH[+el.dataset.i]; if(!c) return;
-    if(c.type==='line') drawLine(el,c.cfg); else if(c.type==='lanes') drawLanes(el,c.cfg); else drawBars(el,c.cfg);
+    if(c.type==='line') drawLine(el,c.cfg); else if(c.type==='lanes') drawLanes(el,c.cfg); else if(c.type==='gaps') drawGaps(el,c.cfg); else drawBars(el,c.cfg);
   });
 }
 function labelsEvery(n,iw){ const gap=iw/Math.max(1,n-1); return gap>=34? Array.from({length:n},(_,i)=>i) : xlabelIdx(n,iw,34); }
@@ -455,6 +468,33 @@ function drawLanes(el,c){
     showTip(h,p.clientX,p.clientY); };
   svg.addEventListener('mousemove',move); svg.addEventListener('touchstart',move,{passive:true}); svg.addEventListener('touchmove',move,{passive:true});
   svg.addEventListener('mouseleave',()=>{ cx.setAttribute('visibility','hidden'); hideTip(); });
+}
+
+// Vertical columns: biggest gaps. Hover a column for the hub's target, today's active stars and what is missing.
+function drawGaps(el,c){
+  const list=c.list, n=list.length; if(!n){ el.innerHTML='<p class="cap">No data</p>'; return; }
+  const avail=Math.max(300,el.clientWidth||900), m={l:66,r:14,t:28,b:118}, ih=290, H=m.t+ih+m.b;
+  const W=Math.max(avail,m.l+m.r+n*25), iw=W-m.l-m.r, band=iw/n, bw=Math.min(band*0.64,30);
+  const mx=Math.max(1,...list.map(h=>h.missing)), ticks=niceTicks(0,mx), hi=ticks[ticks.length-1];
+  const Y=v=>m.t+ih-v/hi*ih;
+  let g='<defs>', bars='';
+  list.forEach((h,i)=>{ const r=h.missing/mx, hue=Math.round(40-r*44);
+    g+=`<linearGradient id="gg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${hue-6},80%,48%)"/><stop offset="1" stop-color="hsl(${hue+8},88%,62%)"/></linearGradient>`; });
+  g+='</defs>';
+  ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/><text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="var(--sub)">${t}</text>`; });
+  list.forEach((h,i)=>{
+    const cx=m.l+band*i+band/2, x=cx-bw/2, y=Y(h.missing), bh=Math.max(3,m.t+ih-y);
+    const active=h.target-h.missing, ach=h.target?Math.round(active/h.target*100):0;
+    const tip=`<b>${esc(h.hub)}</b><br>${esc(h.region)} \u2022 ${esc(h.sup)}<br>Target: <b>${fmt(h.target)}</b><br>Active today: <b>${fmt(active)}</b><br>Missing: <b>${fmt(h.missing)}</b><br>Achieved: ${ach}%`;
+    const nm=h.hub.length>17?h.hub.slice(0,16)+'\u2026':h.hub;
+    bars+=`<g data-tip="${tip.replace(/"/g,'&quot;')}"><rect class="gh" x="${m.l+band*i}" y="${m.t}" width="${band}" height="${ih+m.b}" fill="transparent"/>
+      <rect x="${x}" y="${m.t+ih-bh}" width="${bw}" height="${bh}" rx="4" fill="url(#gg${i})"/>
+      <text x="${cx}" y="${m.t+ih-bh-6}" text-anchor="middle" font-size="${band>=34?12:11}" font-weight="800" fill="var(--ink)">${fmt(h.missing)}</text>
+      <text transform="translate(${cx+4},${m.t+ih+12}) rotate(-58)" text-anchor="end" font-size="11.5" font-weight="600" fill="var(--ink)">${esc(nm)}</text></g>`;
+  });
+  g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${m.t+ih}" y2="${m.t+ih}" stroke="var(--sub)" stroke-width="1"/>`+bars;
+  el.style.overflowX='auto';
+  el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Biggest gaps by hub" style="display:block">${g}</svg>`;
 }
 
 function drawBars(el,c){
@@ -805,11 +845,21 @@ function sbars(groups){
   return groups.map(g=>{ const ach=g.target-g.missing, p=g.target?Math.max(0,Math.min(100,ach/g.target*100)):0;
     return `<div class="hb2" data-tip="<b>${esc(g.label)}</b><br>${g.hubs} hubs<br>Target ${fmt(g.target)}<br>Achieved ${fmt(ach)} (${p.toFixed(0)}%)<br>Missing ${fmt(g.missing)}"><div class="nm">${esc(g.label)} <small>${g.hubs} hubs</small></div><div class="vl">${p.toFixed(0)}% \u2022 Target ${fmt(g.target)} \u2022 <span class="dn">\u2212${fmt(g.missing)}</span></div><div class="tr"><i style="width:${p}%;background:var(--green)"></i><i style="width:${100-p}%;background:var(--red);opacity:.55"></i></div></div>`; }).join('');
 }
+function gapRows(list){
+  const mx=Math.max(1,...list.map(h=>h.missing));
+  return `<div class="gaps" style="--rows:${Math.ceil(list.length/2)}">`+list.map((h,i)=>{
+    const r=h.missing/mx, hue=Math.round(40-r*44), ach=h.target?Math.round((h.target-h.missing)/h.target*100):0;
+    return `<div class="gr${i<3?' top':''}" data-tip="<b>${esc(h.hub)}</b><br>${esc(h.region)} \u2022 ${esc(h.sup)}<br>Target ${fmt(h.target)}<br>Missing ${fmt(h.missing)}<br>Achieved ${ach}%">
+      <span class="rk">${i+1}</span><span class="nm">${esc(h.hub)}</span>
+      <span class="tr"><i style="width:${Math.max(3,r*100)}%;background:linear-gradient(90deg,hsl(${hue+8},88%,60%),hsl(${hue-6},78%,46%))"></i></span>
+      <span class="vl"><b>${fmt(h.missing)}</b><small>/${fmt(h.target)}</small></span></div>`; }).join('')+'</div>';
+}
 function pgTarget(m){
   const hubs=m.hubs, T=sum(hubs.map(h=>h.target)), M=sum(hubs.map(h=>h.missing)), A=T-M, pct=A/T*100;
   setSubtitle(`${hubs.length} hubs • Achievement ${pct.toFixed(1)}% • ${stamp()}`);
   const byR=groupBy(hubs,'region'), byS=groupBy(hubs,'sup'), byN=groupBy(hubs,'sen');
   const topGap=[...hubs].sort((a,b)=>b.missing-a.missing).slice(0,10).map(h=>({label:h.hub,v:h.missing,color:'var(--red)'}));
+  const top40=[...hubs].sort((a,b)=>b.missing-a.missing).slice(0,40);
   const legend=`<div class="legend"><span><i style="background:var(--green)"></i>Achieved</span><span><i style="background:var(--red);opacity:.55"></i>Missing</span></div>`;
   const worstR=[...byR].sort((a,b)=>(a.target-a.missing)/a.target-(b.target-b.missing)/b.target)[0];
   const st=m.sheetTotal, mism=st&&(st.target!==T||st.missing!==M);
@@ -824,14 +874,12 @@ function pgTarget(m){
     <div class="panel"><h2>By supervisor</h2><p class="cap">Share of target reached</p>${legend}${sbars(byS)}</div>
     <div class="panel"><h2>By senior</h2><p class="cap">Share of target reached</p>${legend}${sbars(byN)}</div>
   </div>
-  <div class="grid2">
-    <div class="panel"><h2>Biggest gaps</h2><p class="cap">Top 10 hubs by missing stars</p>${hbars(topGap,{color:'var(--red)'})}</div>
-    ${insights([
+  ${insights([
       `Overall <b>${fmt(A)}</b> of <b>${fmt(T)}</b> target stars are in place (<b>${pct.toFixed(1)}%</b>); <b>${fmt(M)}</b> still missing.`,
       `Largest gap: <b>${esc(topGap[0].label)}</b> (−${fmt(topGap[0].v)}), then ${esc(topGap[1].label)} (−${topGap[1].v}) and ${esc(topGap[2].label)} (−${topGap[2].v}).`,
       `Region furthest from target: <b>${esc(worstR.label)}</b> at ${((worstR.target-worstR.missing)/worstR.target*100).toFixed(0)}%.`,
       `Top 10 gaps add up to ${fmt(sum(topGap.map(g=>g.v)))} stars – ${(sum(topGap.map(g=>g.v))/M*100).toFixed(0)}% of everything missing.`])}
-  </div>
+  <div class="panel" style="margin:16px 0"><h2>Biggest gaps</h2><p class="cap">Top ${top40.length} hubs by missing stars \u2022 hover a column to see the hub\u2019s target and today\u2019s active stars</p>${chart('gaps',{list:top40})}</div>
   <div class="panel"><h2>All hubs</h2><p class="cap">Click a column to sort</p>
     <div class="tools"><input class="search" id="tq" placeholder="Search hub, region, supervisor…" value="${esc(TG.q)}"></div>
     <div class="tw maxh"><table><thead id="tgh"></thead><tbody id="tgb"></tbody></table></div></div>`;
