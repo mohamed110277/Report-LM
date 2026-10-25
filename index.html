@@ -360,7 +360,7 @@ function parseTarget(rows){
   for(const r of rows.slice(hi+1)){
     const name=String(r[c.hub]==null?'':r[c.hub]).trim(); const t=nn(r[c.target]); if(!name||!fin(t)) continue;
     const m=nn(r[c.miss]);
-    hubs.push({hub:name,region:String(r[c.region]||'Other').trim()||'Other',sup:String(r[c.sup]||'-').trim()||'-',sen:String(r[c.sen]||'-').trim()||'-',target:t,missing:fin(m)?m:0,ofd:nn(r[c.ofd])});
+    hubs.push({hub:name,region:String(r[c.region]||'Other').trim()||'Other',sup:String(r[c.sup]||'-').trim()||'-',sen:String(r[c.sen]||'-').trim()||'-',target:t,missing:fin(m)?Math.max(0,m):0,missingRaw:fin(m)?m:0,ofd:nn(r[c.ofd])});   // missing = only hubs below target; missingRaw keeps negatives (hub above target)
   }
   if(!hubs.length) throw new Error('no hubs');
   let sheetTotal=null; const tr0=rows.slice(0,hi).find(r=>nrm(r[0])==='total');
@@ -645,7 +645,7 @@ function hcard(d){
   </div>`;
 }
 function setHubs(hubs,totals){
-  D=hubs.map(d=>({...d})); TOTALS=totals;
+  D=hubs.map(d=>({...d})); TOTALS={...totals, missing:sum(hubs.map(h=>fin(h.missing)?Math.max(0,h.missing):Math.max(0,h.target-h.active)))};   // negative = hub above target, not counted
   ofdMin=Math.min(...D.map(d=>d.ofdPerStar)); ofdMax=Math.max(...D.map(d=>d.ofdPerStar));
   kpis=[{label:'Target',val:fmt(TOTALS.target),c:'#2f5ee0'},{label:'Total stars',val:fmt(TOTALS.stars),c:'#8892a3'},{label:'Active Star',val:fmt(TOTALS.active),c:'#2f5ee0'},
     {label:'absence',val:fmt(TOTALS.absence),c:'#e08a1f'},{label:'absence %',val:TOTALS.absencePct,c:'#e08a1f'},{label:'OFD',val:fmt(TOTALS.ofd),c:'#1a9c6b'},
@@ -882,16 +882,16 @@ function pgTarget(m){
   setSubtitle(`${hubs.length} hubs • Achievement ${pct.toFixed(1)}% • ${stamp()}`);
   const byR=groupBy(hubs,'region'), byS=groupBy(hubs,'sup'), byN=groupBy(hubs,'sen');
   const topGap=[...hubs].sort((a,b)=>b.missing-a.missing).slice(0,10).map(h=>({label:h.hub,v:h.missing,color:'var(--red)'}));
-  const top40=[...hubs].sort((a,b)=>b.missing-a.missing).slice(0,40);
+  const top40=[...hubs].filter(h=>h.missing>0).sort((a,b)=>b.missing-a.missing).slice(0,40);
   const legend=`<div class="legend"><span><i style="background:var(--green)"></i>Achieved</span><span><i style="background:var(--red);opacity:.55"></i>Missing</span></div>`;
   const worstR=[...byR].sort((a,b)=>(a.target-a.missing)/a.target-(b.target-b.missing)/b.target)[0];
-  const st=m.sheetTotal, mism=st&&(st.target!==T||st.missing!==M);
+  const st=m.sheetTotal, mism=st&&(st.target!==T);
   return `<div class="kpis">
     ${kpi('Target',fmt(T),hubs.length+' hubs','var(--blue)')}
     ${kpi('Achieved',fmt(A),pct.toFixed(1)+'% of target','var(--green)')}
     ${kpi('Missing',fmt(M),(M/T*100).toFixed(1)+'% of target','var(--red)')}
-    ${kpi('Avg gap / hub',(M/hubs.length).toFixed(1),'stars per hub','var(--orange)')}</div>
-  ${mism?`<div class="panel" style="margin-bottom:16px;border-color:var(--orange)"><p class="cap" style="margin:0"><b style="color:var(--orange)">Data note:</b> the sheet\u2019s Total row shows target ${fmt(st.target)} / missing ${fmt(st.missing)}, but the ${hubs.length} hubs listed add up to ${fmt(T)} / ${fmt(M)}. This page uses the hub rows.</p></div>`:''}
+    ${kpi('Avg gap / hub',(M/Math.max(1,hubs.filter(h=>h.missing>0).length)).toFixed(1),'stars per hub below target','var(--orange)')}</div>
+  ${mism?`<div class="panel" style="margin-bottom:16px;border-color:var(--orange)"><p class="cap" style="margin:0"><b style="color:var(--orange)">Data note:</b> the sheet\u2019s Total row shows target ${fmt(st.target)}, but the ${hubs.length} hubs listed add up to ${fmt(T)}. This page uses the hub rows.</p></div>`:''}
   <div class="grid3">
     <div class="panel"><h2>By region</h2><p class="cap">Share of target reached</p>${legend}${sbars(byR)}</div>
     <div class="panel"><h2>By supervisor</h2><p class="cap">Share of target reached</p>${legend}${sbars(byS)}</div>
@@ -912,11 +912,11 @@ function mountTarget(){
   const cols=[['hub','Hub',1],['region','Region',1],['sup','Supervisor',1],['sen','Senior',1],['target','Target'],['missing','Missing'],['pct','Achieved'],['ofd','OFD/Star']];
   const draw=()=>{
     const q=TG.q.trim().toLowerCase();
-    let list=hubs.map(h=>({...h,pct:h.target?(h.target-h.missing)/h.target*100:0})).filter(h=>!q||[h.hub,h.region,h.sup,h.sen].some(s=>String(s).toLowerCase().includes(q)));
+    let list=hubs.map(h=>({...h,missing:h.missingRaw,pct:h.target?(h.target-h.missingRaw)/h.target*100:0})).filter(h=>!q||[h.hub,h.region,h.sup,h.sen].some(s=>String(s).toLowerCase().includes(q)));
     list.sort((a,b)=>{ const x=a[TG.sort],y=b[TG.sort]; return (typeof x==='string'?x.localeCompare(y):(x-y))*TG.dir; });
     document.getElementById('tgh').innerHTML='<tr>'+cols.map(c=>`<th class="sortable${c[2]?' l':''}" data-k="${c[0]}">${c[1]}${TG.sort===c[0]?(TG.dir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr>';
     document.getElementById('tgb').innerHTML=list.map(h=>{ const p=Math.max(0,Math.min(100,h.pct)); const col=p>=90?'var(--green)':p>=75?'var(--orange)':'var(--red)';
-      return `<tr><td>${esc(h.hub)}</td><td class="l">${esc(h.region)}</td><td class="l">${esc(h.sup)}</td><td class="l">${esc(h.sen)}</td><td>${fmt(h.target)}</td><td class="${h.missing>0?'dn':'up'}">${fmt(h.missing)}</td><td><span class="pg"><i style="width:${p}%;background:${col}"></i></span> ${h.pct.toFixed(0)}%</td><td>${fin(h.ofd)?fmt(h.ofd):'–'}</td></tr>`; }).join('')||'<tr><td colspan="8" class="l">No hubs match</td></tr>';
+      return `<tr><td>${esc(h.hub)}</td><td class="l">${esc(h.region)}</td><td class="l">${esc(h.sup)}</td><td class="l">${esc(h.sen)}</td><td>${fmt(h.target)}</td><td class="${h.missingRaw>0?'dn':'up'}">${fmt(h.missingRaw)}</td><td><span class="pg"><i style="width:${p}%;background:${col}"></i></span> ${h.pct.toFixed(0)}%</td><td>${fin(h.ofd)?fmt(h.ofd):'–'}</td></tr>`; }).join('')||'<tr><td colspan="8" class="l">No hubs match</td></tr>';
   };
   draw();
   document.getElementById('tgh').addEventListener('click',e=>{ const th=e.target.closest('th[data-k]'); if(!th) return; const k=th.dataset.k; if(TG.sort===k) TG.dir*=-1; else{ TG.sort=k; TG.dir=(k==='hub'||k==='region'||k==='sup'||k==='sen')?1:-1; } draw(); });
@@ -927,7 +927,7 @@ function mountTarget(){
 function pgUrgent(m){
   const n=m.dates.length, labels=m.dates.map(dl);
   const tot=m.dates.map((_,i)=>sum(m.hubs.map(h=>h.vals[i])));
-  const T=sum(m.hubs.map(h=>h.target)), cur=last(tot), M=T-cur, chg=cur-tot[0];
+  const T=sum(m.hubs.map(h=>h.target)), cur=last(tot), M=sum(m.hubs.map(h=>{ const v=h.vals.filter(fin); return Math.max(0,h.target-(v.length?last(v):0)); })), chg=cur-tot[0];
   setSubtitle(`${m.hubs.length} priority hubs • ${labels[0]} – ${labels[n-1]} • ${stamp()}`);
   const rows=[...m.hubs].map(h=>{ const v=h.vals.filter(fin); const c=last(v); return {...h,cur:c,gap:h.target-c,ch:c-v[0]}; }).sort((a,b)=>b.gap-a.gap);
   const grow=rows.filter(r=>r.ch>0).length, flat=rows.filter(r=>r.ch<=0);
