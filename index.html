@@ -69,6 +69,7 @@ h1{font-size:23px;margin:0 0 4px;}
 .panel h2{font-size:15px;margin:0 0 3px;}
 .panel .cap{font-size:12.5px;color:var(--sub);margin:0 0 12px;}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-bottom:16px;}
+.stack{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-bottom:16px;}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin-bottom:16px;}
 .chart{width:100%;position:relative;}
 .chart svg{display:block;}
@@ -525,7 +526,9 @@ function drawBars(el,c){
   const W=Math.max(260,el.clientWidth||600), H=c.height||230, m={l:48,r:12,t:20,b:30};
   const n=c.labels.length, f=c.fmt||fmt;
   const vv=c.values.filter(fin); let lo=Math.min(0,...vv), hi=Math.max(0,...vv);
-  const ticks=niceTicks(lo,hi); lo=ticks[0]; hi=ticks[ticks.length-1];
+  const ticks=niceTicks(lo,hi);
+  if(Math.min(...vv)<0 && ticks.length>1 && (Math.min(...vv)-ticks[0])/((ticks[ticks.length-1]-ticks[0])||1)<0.1) ticks.unshift(+(ticks[0]-(ticks[1]-ticks[0])).toFixed(8));   // leave room for the label under the lowest negative bar
+  lo=ticks[0]; hi=ticks[ticks.length-1];
   m.l=Math.max(48,14+6.4*Math.max(...ticks.map(t=>f(t).length)));
   const iw=W-m.l-m.r, ih=H-m.t-m.b;
   const Y=v=>m.t+ih-(v-lo)/((hi-lo)||1)*ih, band=iw/n, bw=Math.min(band*0.64,36);
@@ -786,9 +789,9 @@ function pgBosta(pts){
     ${kpi('Peak',fmt(peak.v),dl(peak.d),'var(--green)')}
     ${kpi('Lowest',fmt(low.v),dl(low.d),'var(--orange)')}
     ${kpi('Average',fmt(Math.round(avg)),pts.length+' days recorded','var(--sub)')}</div>
-  <div class="grid2">
-    <div class="panel"><h2>Active stars per day</h2><p class="cap">Hover a point for the exact value</p>${chart('line',{labels:pts.map(p=>dl(p.d)),series:[{name:'Active',color:'var(--blue)',values:pts.map(p=>p.v)}],height:280,allLabels:true,title:'Active stars per day'})}</div>
-    <div class="panel"><h2>Daily change</h2><p class="cap">Difference from the previous recorded day</p>${chart('bars',{labels:pts.slice(1).map(p=>dl(p.d)),values:diffs,name:'Change',fmt:v=>signed(v),colorFn:v=>v>=0?'var(--green)':'var(--red)',height:260,title:'Daily change'})}</div>
+  <div class="stack">
+    <div class="panel"><h2>Active stars per day</h2><p class="cap">Hover a point for the exact value</p>${chart('line',{labels:pts.map(p=>dl(p.d)),series:[{name:'Active',color:'var(--blue)',values:pts.map(p=>p.v)}],height:400,allLabels:true,title:'Active stars per day'})}</div>
+    <div class="panel"><h2>Daily change</h2><p class="cap">Difference from the previous recorded day</p>${chart('bars',{labels:pts.slice(1).map(p=>dl(p.d)),values:diffs,name:'Change',fmt:v=>signed(v),colorFn:v=>v>=0?'var(--green)':'var(--red)',height:320,title:'Daily change'})}</div>
   </div>
   ${insights([
     `Active stars are <b>${fmt(lastp.v)}</b> on ${dl(lastp.d)}, <b>${signed(chg)}</b> (${signed(chgp,1)}%) compared with ${dl(first.d)}.`,
