@@ -1185,59 +1185,59 @@ function drawCard(ctx,d,x,y,w,h){
   ctx.save(); ctx.shadowColor='rgba(30,40,60,.14)'; ctx.shadowBlur=14; ctx.shadowOffsetY=4;
   ctx.fillStyle='#ffffff'; roundRect(ctx,x,y,w,h,18); ctx.fill(); ctx.restore();
   ctx.strokeStyle='#cdd1d8'; ctx.lineWidth=1; roundRect(ctx,x+0.5,y+0.5,w-1,h-1,18); ctx.stroke();
-  const px=x+18, iw=w-36, cx=x+w/2; let py=y+32; ctx.textAlign='left';
-  ctx.fillStyle='#6a7280'; ctx.font='700 14px Segoe UI, Arial'; drawPinIcon(ctx,px+6,py-9,6,'#6a7280'); ctx.fillText(fitText(ctx,d.hub,w-58),px+18,py);
+  const px=x+18, iw=w-36, cx=x+w/2; let py=y+36; ctx.textAlign='left';
+  ctx.fillStyle='#6a7280'; ctx.font='700 18px Segoe UI, Arial'; drawPinIcon(ctx,px+7,py-11,7,'#6a7280'); ctx.fillText(fitText(ctx,d.hub,w-64),px+22,py);
   // gauge
-  const gy=y+142, R=70, lw=13; ctx.lineCap='round'; ctx.lineWidth=lw;
+  const gy=y+168, R=82, lw=16; ctx.lineCap='round'; ctx.lineWidth=lw;
   ctx.strokeStyle='#dde0e6'; ctx.beginPath(); ctx.arc(cx,gy,R,Math.PI,2*Math.PI); ctx.stroke();
   if(pct>0){ ctx.strokeStyle=sc; ctx.beginPath(); ctx.arc(cx,gy,R,Math.PI,Math.PI+Math.PI*pct/100); ctx.stroke(); }
   ctx.lineCap='butt'; ctx.textAlign='center';
-  ctx.fillStyle='#1c1f26'; ctx.font='800 42px Segoe UI, Arial'; ctx.fillText(fmt(d.active),cx,gy-6);
-  ctx.fillStyle='#6a7280'; ctx.font='700 11px Segoe UI, Arial'; ctx.fillText('ACTIVE STARS',cx,gy+14);
+  ctx.fillStyle='#1c1f26'; ctx.font='800 54px Segoe UI, Arial'; ctx.fillText(fmt(d.active),cx,gy-6);
+  ctx.fillStyle='#6a7280'; ctx.font='700 13px Segoe UI, Arial'; ctx.fillText('ACTIVE STARS',cx,gy+18);
   // target line
-  let ty=gy+40; const t1='Target ', t2=fmt(d.target), t3=missing>0?'-'+fmt(missing)+' missing':'Target exceeded';
-  ctx.font='400 14px Segoe UI, Arial'; const w1=ctx.measureText(t1).width; ctx.font='700 16px Segoe UI, Arial'; const w2=ctx.measureText(t2).width; ctx.font='700 14px Segoe UI, Arial'; const w3=ctx.measureText(t3).width;
+  let ty=gy+48; const t1='Target ', t2=fmt(d.target), t3=missing>0?'-'+fmt(missing)+' missing':'Target exceeded';
+  ctx.font='400 16px Segoe UI, Arial'; const w1=ctx.measureText(t1).width; ctx.font='700 19px Segoe UI, Arial'; const w2=ctx.measureText(t2).width; ctx.font='700 16px Segoe UI, Arial'; const w3=ctx.measureText(t3).width;
   let sx=cx-(w1+w2+10+w3)/2; ctx.textAlign='left';
-  ctx.font='400 14px Segoe UI, Arial'; ctx.fillStyle='#6a7280'; ctx.fillText(t1,sx,ty);
-  ctx.font='700 16px Segoe UI, Arial'; ctx.fillStyle='#1c1f26'; ctx.fillText(t2,sx+w1,ty);
-  ctx.font='700 14px Segoe UI, Arial'; ctx.fillStyle=missing>0?'#d1394a':'#1a9c6b'; ctx.fillText(t3,sx+w1+w2+10,ty);
+  ctx.font='400 16px Segoe UI, Arial'; ctx.fillStyle='#6a7280'; ctx.fillText(t1,sx,ty);
+  ctx.font='700 19px Segoe UI, Arial'; ctx.fillStyle='#1c1f26'; ctx.fillText(t2,sx+w1,ty);
+  ctx.font='700 16px Segoe UI, Arial'; ctx.fillStyle=missing>0?'#d1394a':'#1a9c6b'; ctx.fillText(t3,sx+w1+w2+10,ty);
   // OFD / Star strip (labelled)
-  const oy=ty+14, oh=38; ctx.fillStyle=oc.bg; roundRect(ctx,px,oy,iw,oh,12); ctx.fill();
-  ctx.fillStyle=oc.fg; ctx.font='700 14px Segoe UI, Arial'; ctx.fillText('OFD / Star',px+14,oy+25);
-  ctx.textAlign='right'; ctx.font='800 22px Segoe UI, Arial'; ctx.fillText(fmt(d.ofdPerStar),px+iw-14,oy+27); ctx.textAlign='left';
+  const oy=ty+16, oh=46; ctx.fillStyle=oc.bg; roundRect(ctx,px,oy,iw,oh,12); ctx.fill();
+  ctx.fillStyle=oc.fg; ctx.font='700 17px Segoe UI, Arial'; ctx.fillText('OFD / Star',px+14,oy+30);
+  ctx.textAlign='right'; ctx.font='800 27px Segoe UI, Arial'; ctx.fillText(fmt(d.ofdPerStar),px+iw-14,oy+33); ctx.textAlign='left';
   // 3 stats
-  const sy=oy+oh+16; ctx.strokeStyle='#cdd1d8'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(px,sy); ctx.lineTo(px+iw,sy); ctx.stroke();
+  const sy=oy+oh+18; ctx.strokeStyle='#cdd1d8'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(px,sy); ctx.lineTo(px+iw,sy); ctx.stroke();
   const cw=iw/3; [[fmt(d.stars),'Total stars'],[fmt(d.ofd),'OFD'],[fmt(d.absence),'Abs \u2022 '+d.absencePct]].forEach((m,i)=>{
     const mx=px+cw*i+cw/2; ctx.textAlign='center';
-    ctx.fillStyle='#1c1f26'; ctx.font='700 17px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m[0],cw-8),mx,sy+27);
-    ctx.fillStyle='#6a7280'; ctx.font='400 11px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m[1],cw-6),mx,sy+44);
-    if(i>0){ ctx.strokeStyle='#cdd1d8'; ctx.beginPath(); ctx.moveTo(px+cw*i,sy+12); ctx.lineTo(px+cw*i,sy+46); ctx.stroke(); } });
+    ctx.fillStyle='#1c1f26'; ctx.font='700 21px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m[0],cw-6),mx,sy+31);
+    ctx.fillStyle='#6a7280'; ctx.font='400 13px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m[1],cw-2),mx,sy+51);
+    if(i>0){ ctx.strokeStyle='#cdd1d8'; ctx.beginPath(); ctx.moveTo(px+cw*i,sy+12); ctx.lineTo(px+cw*i,sy+54); ctx.stroke(); } });
   ctx.textAlign='left';
 }
 const PER_IMAGE=28;   // cards per downloaded image (4 rows x 7)
 async function buildImageBlob(part,parts){
   part=part||0; parts=parts||1;
-  const cols=7, cardW=280, cardH=348, gap=18, pad=32;
+  const cols=7, cardW=280, cardH=372, gap=14, pad=22;
   const all=currentSorted.length?currentSorted:D;
   const list=parts>1 ? (part===0 ? all.slice(0,PER_IMAGE) : all.slice(PER_IMAGE)) : all;   // image 1 = first 28 cards, image 2 = all the rest
-  const first=part===0, headerH=first?206:84, rows=Math.ceil(list.length/cols);
+  const first=part===0, headerH=first?236:100, rows=Math.ceil(list.length/cols);
   const width=pad*2+cols*cardW+(cols-1)*gap, height=headerH+pad+rows*(cardH+gap);
   // as sharp as the browser allows: up to 4x, but never past the canvas limits (16k px per side, ~200M pixels)
   let scale=4; while(scale>1 && (width*scale>15000 || height*scale>15000 || width*scale*height*scale>2e8)) scale-=0.25;
   const canvas=document.createElement('canvas'); canvas.width=Math.round(width*scale); canvas.height=Math.round(height*scale);
   const ctx=canvas.getContext('2d'); ctx.scale(scale,scale);
   ctx.fillStyle='#dcdfe4'; ctx.fillRect(0,0,width,height);
-  ctx.fillStyle='#1c1f26'; ctx.font='700 23px Segoe UI, Arial'; ctx.textAlign='left';
-  ctx.fillText('Fleet (ACQ)-LM'+(parts>1?'  \u2022  Part '+(part+1)+' of '+parts:''),pad,38);
-  ctx.fillStyle='#68707d'; ctx.font='400 13px Segoe UI, Arial';
-  const from=part===0?1:PER_IMAGE+1; ctx.fillText(parts>1 ? 'Hubs '+from+'\u2013'+(from+list.length-1)+' of '+all.length+'  \u2022  '+document.getElementById('subtitle').textContent : document.getElementById('subtitle').textContent,pad,58);
+  ctx.fillStyle='#1c1f26'; ctx.font='800 32px Segoe UI, Arial'; ctx.textAlign='left';
+  ctx.fillText('Fleet (ACQ)-LM'+(parts>1?'  \u2022  Part '+(part+1)+' of '+parts:''),pad,44);
+  ctx.fillStyle='#68707d'; ctx.font='400 17px Segoe UI, Arial';
+  const from=part===0?1:PER_IMAGE+1; ctx.fillText(parts>1 ? 'Hubs '+from+'\u2013'+(from+list.length-1)+' of '+all.length+'  \u2022  '+document.getElementById('subtitle').textContent : document.getElementById('subtitle').textContent,pad,72);
   if(first){
-    const kW=(width-pad*2-(kpis.length-1)*10)/kpis.length, kpiH=100;
-    kpis.forEach((k,i)=>{ const x=pad+i*(kW+10), y=74;
+    const kW=(width-pad*2-(kpis.length-1)*10)/kpis.length, kpiH=118;
+    kpis.forEach((k,i)=>{ const x=pad+i*(kW+10), y=92;
       ctx.fillStyle='#eceef1'; roundRect(ctx,x,y,kW,kpiH,10); ctx.fill(); ctx.strokeStyle='#cdd1d8'; roundRect(ctx,x,y,kW,kpiH,10); ctx.stroke();
       ctx.fillStyle=k.c; ctx.fillRect(x,y,5,kpiH); ctx.textAlign='left';
-      ctx.fillStyle='#1a9c6b'; ctx.font='800 20px Segoe UI, Arial'; ctx.fillText(fitText(ctx,k.label,kW-24),x+16,y+36);
-      ctx.fillStyle='#1c1f26'; ctx.font='700 30px Segoe UI, Arial'; ctx.fillText(k.val,x+16,y+78); });
+      ctx.fillStyle='#1a9c6b'; ctx.font='800 23px Segoe UI, Arial'; ctx.fillText(fitText(ctx,k.label,kW-24),x+16,y+40);
+      ctx.fillStyle='#1c1f26'; ctx.font='700 40px Segoe UI, Arial'; ctx.fillText(k.val,x+16,y+92); });
   }
   list.forEach((d,i)=>{ drawCard(ctx,d,pad+(i%cols)*(cardW+gap),headerH+Math.floor(i/cols)*(cardH+gap),cardW,cardH); });
   return await new Promise(res=>canvas.toBlob(res,'image/png'));
