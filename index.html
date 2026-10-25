@@ -11,12 +11,12 @@
 :root{
   --ink:#1c1f26; --sub:#5b6371; --line:#cdd1d8; --bg:#dcdfe4; --card:#eceef1;
   --blue:#2f5ee0; --green:#1a9c6b; --red:#d1394a; --orange:#e08a1f;
-  --track:#dde0e6; --grid:#d2d6dc; --hover:#e1e4ea; color-scheme:light; --heat:47,94,224;
+  --track:#dde0e6; --grid:#d2d6dc; --hover:#e1e4ea; --cardw:#ffffff; color-scheme:light; --heat:47,94,224;
 }
 :root[data-theme="dark"]{
   --ink:#e8eaef; --sub:#9aa3b2; --line:#2e343e; --bg:#13161b; --card:#1c2027;
   --blue:#6b8cff; --green:#34c58f; --red:#ef6676; --orange:#f0a24a;
-  --track:#2a303a; --grid:#2a303a; --hover:#252b34; color-scheme:dark; --heat:107,140,255;
+  --track:#2a303a; --grid:#2a303a; --hover:#252b34; --cardw:#1c2027; color-scheme:dark; --heat:107,140,255;
 }
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif;}
@@ -123,6 +123,23 @@ tr:last-child td{border-bottom:0;}
 .sortbtn{border:1px solid var(--line);background:var(--card);color:var(--sub);padding:8px 14px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;}
 .sortbtn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+.gd{background:var(--cardw);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:0 2px 8px rgba(30,40,60,.07);min-width:0;}
+.gd .gn{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--sub);min-width:0;}
+.gd .gn .pin{width:12px;height:12px;flex:none;}
+.gd .gn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gd .gk{position:relative;width:100%;max-width:150px;margin:8px auto 0;aspect-ratio:140/90;}
+.gd .gk svg{display:block;width:100%;height:auto;}
+.gd .gk b{position:absolute;left:0;right:0;top:36%;text-align:center;font-size:30px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+.gd .gk em{position:absolute;left:0;right:0;top:70%;text-align:center;font-size:9.5px;font-style:normal;font-weight:700;color:var(--sub);letter-spacing:.04em;}
+.gd .gtg{display:flex;justify-content:center;align-items:baseline;flex-wrap:wrap;gap:2px 8px;font-size:11.5px;color:var(--sub);margin:8px 0 9px;text-align:center;}
+.gd .gtg b{color:var(--ink);font-size:13px;}
+.gd .gtg i{font-style:normal;font-weight:700;}
+.gd .gtg i.m{color:var(--red);} .gd .gtg i.ok{color:var(--green);}
+.gd .gos{display:flex;justify-content:space-between;align-items:center;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;}
+.gd .gos b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;}
+.gd .gst{display:grid;grid-template-columns:repeat(3,1fr);margin-top:9px;padding-top:9px;border-top:1px solid var(--line);text-align:center;font-size:9.5px;color:var(--sub);}
+.gd .gst b{display:block;font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums;}
+.gd .gst div+div{border-inline-start:1px solid var(--line);}
 .gc{background:linear-gradient(160deg,#1f2530,#151a22);color:#eef1f6;border-radius:16px;padding:14px;border:1px solid #2c3442;position:relative;overflow:hidden;box-shadow:0 8px 20px rgba(20,25,35,.22);min-width:0;}
 .gc::after{content:"";position:absolute;right:-30px;top:-30px;width:90px;height:90px;border-radius:50%;background:var(--c);opacity:.25;filter:blur(18px);pointer-events:none;}
 .gc .gn{display:flex;align-items:center;gap:5px;font-size:12px;color:#9aa6b8;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;}
@@ -143,6 +160,13 @@ tr:last-child td{border-bottom:0;}
 .gc .gg .hi b{color:#12161d;}
 @media (min-width:1100px){
   .cards{grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;}
+  .gd{padding:10px;border-radius:13px;}
+  .gd .gn{font-size:11px;}
+  .gd .gk b{font-size:25px;}
+  .gd .gk em{font-size:8.5px;}
+  .gd .gtg{font-size:10.5px;margin:6px 0 8px;}.gd .gtg b{font-size:12px;}
+  .gd .gos{padding:5px 8px;font-size:11px;}.gd .gos b{font-size:16px;}
+  .gd .gst{font-size:9px;margin-top:8px;padding-top:8px;}.gd .gst b{font-size:12px;}
   .gc{padding:11px 11px 12px;border-radius:13px;}
   .gc .gn{font-size:11px;}
   .gc .gb{font-size:27px;}
@@ -607,19 +631,15 @@ function renderPage(){
 function ofdColor(val,mn=ofdMin,mx=ofdMax){ const t=(val-mn)/((mx-mn)||1); const hue=(1-t)*120; return {bg:`hsl(${hue},70%,90%)`,fg:`hsl(${hue},65%,28%)`}; }
 function ofdSolid(val,mn=ofdMin,mx=ofdMax){ const t=(val-mn)/((mx-mn)||1); return `hsl(${(1-t)*120},62%,52%)`; }
 function hcard(d){
-  const missing=d.target-d.active, pct=d.target?d.active/d.target*100:0;
-  const sc=pct>=80?'#1a9c6b':pct>=50?'#e08a1f':'#d1394a', on=Math.max(0,Math.min(10,Math.round(pct/10)));
-  return `<div class="gc" style="--c:${sc}">
-    <div class="gn"><svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(d.hub)}</div>
-    <div class="gb">${fmt(d.active)}</div><div class="gcap">Active stars</div>
-    <div class="gseg">${Array.from({length:10},(_,i)=>`<i class="${i<on?'on':''}"></i>`).join('')}</div>
-    <div class="gt"><span>Target <b>${fmt(d.target)}</b></span>${missing>0?`<em>-${fmt(missing)} missing</em>`:`<em class="ok">Target exceeded</em>`}</div>
-    <div class="gg">
-      <div><b>${fmt(d.stars)}</b>Total stars</div>
-      <div><b>${fmt(d.ofd)}</b>OFD</div>
-      <div><b>${fmt(d.absence)}</b>Absence \u2022 ${esc(d.absencePct)}</div>
-      <div class="hi" style="--hc:${ofdSolid(d.ofdPerStar)}"><b>${fmt(d.ofdPerStar)}</b>OFD/Star</div>
-    </div></div>`;
+  const missing=d.target-d.active, pct=d.target?Math.min(100,d.active/d.target*100):0;
+  const sc=pct>=80?'#1a9c6b':pct>=50?'#e08a1f':'#d1394a', R=60, C=Math.PI*R, oc=ofdColor(d.ofdPerStar);
+  return `<div class="gd">
+    <div class="gn"><svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>${esc(d.hub)}</span></div>
+    <div class="gk"><svg viewBox="0 0 140 82"><path d="M10 74 A60 60 0 0 1 130 74" fill="none" stroke="var(--track)" stroke-width="11" stroke-linecap="round"/><path d="M10 74 A60 60 0 0 1 130 74" fill="none" stroke="${sc}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${C*pct/100} ${C}"/></svg><b>${fmt(d.active)}</b><em>ACTIVE STARS</em></div>
+    <div class="gtg"><span>Target <b>${fmt(d.target)}</b></span>${missing>0?`<i class="m">-${fmt(missing)} missing</i>`:`<i class="ok">Target exceeded</i>`}</div>
+    <div class="gos" style="background:${oc.bg};color:${oc.fg}"><span>OFD / Star</span><b>${fmt(d.ofdPerStar)}</b></div>
+    <div class="gst"><div><b>${fmt(d.stars)}</b>Total stars</div><div><b>${fmt(d.ofd)}</b>OFD</div><div><b>${fmt(d.absence)}</b>Abs \u2022 ${esc(d.absencePct)}</div></div>
+  </div>`;
 }
 function setHubs(hubs,totals){
   D=hubs.map(d=>({...d})); TOTALS=totals;
@@ -1157,36 +1177,44 @@ function drawPinIcon(ctx,cx,cy,r,color){
   ctx.beginPath(); ctx.arc(cx,cy,r*0.36,0,Math.PI*2); ctx.stroke(); ctx.restore();
 }
 function drawCard(ctx,d,x,y,w,h){
-  const missing=d.target-d.active, pct=d.target?d.active/d.target*100:0;
-  const sc=pct>=80?'#1a9c6b':pct>=50?'#e08a1f':'#d1394a', on=Math.max(0,Math.min(10,Math.round(pct/10)));
-  ctx.save(); ctx.shadowColor='rgba(20,25,35,.28)'; ctx.shadowBlur=18; ctx.shadowOffsetY=6;
-  const gr=ctx.createLinearGradient(x,y,x+w*0.6,y+h); gr.addColorStop(0,'#1f2530'); gr.addColorStop(1,'#151a22');
-  ctx.fillStyle=gr; roundRect(ctx,x,y,w,h,18); ctx.fill(); ctx.restore();
-  ctx.save(); roundRect(ctx,x,y,w,h,18); ctx.clip();
-  const rg=ctx.createRadialGradient(x+w-6,y+4,0,x+w-6,y+4,92); rg.addColorStop(0,sc+'55'); rg.addColorStop(1,sc+'00'); ctx.fillStyle=rg; ctx.fillRect(x,y,w,h); ctx.restore();
-  ctx.strokeStyle='#2c3442'; ctx.lineWidth=1; roundRect(ctx,x+0.5,y+0.5,w-1,h-1,18); ctx.stroke();
-  const px=x+18, iw=w-36; let py=y+32; ctx.textAlign='left';
-  ctx.fillStyle='#9aa6b8'; ctx.font='700 14px Segoe UI, Arial'; drawPinIcon(ctx,px+6,py-9,6,'#9aa6b8'); ctx.fillText(fitText(ctx,d.hub,w-58),px+18,py);
-  py+=46; ctx.fillStyle='#ffffff'; ctx.font='800 44px Segoe UI, Arial'; ctx.fillText(fmt(d.active),px,py);
-  py+=24; ctx.fillStyle='#5fd6a6'; ctx.font='700 14px Segoe UI, Arial'; ctx.fillText('Active stars',px,py);
-  py+=18; const gap=4, sw=(iw-gap*9)/10;
-  for(let i=0;i<10;i++){ ctx.fillStyle=i<on?sc:'#2d3544'; roundRect(ctx,px+i*(sw+gap),py,sw,7,3.5); ctx.fill(); }
-  py+=30; ctx.font='400 14px Segoe UI, Arial'; ctx.fillStyle='#9aa6b8'; ctx.fillText('Target ',px,py);
-  const tw=ctx.measureText('Target ').width; ctx.fillStyle='#ffffff'; ctx.font='700 16px Segoe UI, Arial'; ctx.fillText(fmt(d.target),px+tw,py);
-  ctx.textAlign='right'; ctx.font='700 14px Segoe UI, Arial'; ctx.fillStyle=missing>0?'#ff7a8a':'#5fd6a6';
-  ctx.fillText(missing>0?'-'+fmt(missing)+' missing':'Target exceeded',x+w-18,py); ctx.textAlign='left';
-  py+=18; const mw=(iw-10)/2, mh=54;
-  const mn=ofdMin, mx=ofdMax, t=(d.ofdPerStar-mn)/((mx-mn)||1), solid=`hsl(${(1-t)*120},62%,52%)`;
-  [{v:fmt(d.stars),l:'Total stars'},{v:fmt(d.ofd),l:'OFD'},{v:fmt(d.absence),l:'Absence \u2022 '+d.absencePct},{v:fmt(d.ofdPerStar),l:'OFD/Star',hi:1}].forEach((m,i)=>{
-    const mx0=px+(i%2)*(mw+10), my=py+Math.floor(i/2)*(mh+10);
-    ctx.fillStyle=m.hi?solid:'#262d3a'; roundRect(ctx,mx0,my,mw,mh,11); ctx.fill();
-    ctx.fillStyle=m.hi?'#12161d':'#ffffff'; ctx.font='700 19px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m.v,mw-22),mx0+12,my+25);
-    ctx.fillStyle=m.hi?'#12161d':'#9aa6b8'; ctx.font=(m.hi?'600':'400')+' 12px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m.l,mw-22),mx0+12,my+43); });
+  const missing=d.target-d.active, pct=d.target?Math.min(100,d.active/d.target*100):0;
+  const sc=pct>=80?'#1a9c6b':pct>=50?'#e08a1f':'#d1394a', oc=ofdColor(d.ofdPerStar);
+  ctx.save(); ctx.shadowColor='rgba(30,40,60,.14)'; ctx.shadowBlur=14; ctx.shadowOffsetY=4;
+  ctx.fillStyle='#ffffff'; roundRect(ctx,x,y,w,h,18); ctx.fill(); ctx.restore();
+  ctx.strokeStyle='#cdd1d8'; ctx.lineWidth=1; roundRect(ctx,x+0.5,y+0.5,w-1,h-1,18); ctx.stroke();
+  const px=x+18, iw=w-36, cx=x+w/2; let py=y+32; ctx.textAlign='left';
+  ctx.fillStyle='#6a7280'; ctx.font='700 14px Segoe UI, Arial'; drawPinIcon(ctx,px+6,py-9,6,'#6a7280'); ctx.fillText(fitText(ctx,d.hub,w-58),px+18,py);
+  // gauge
+  const gy=y+142, R=70, lw=13; ctx.lineCap='round'; ctx.lineWidth=lw;
+  ctx.strokeStyle='#dde0e6'; ctx.beginPath(); ctx.arc(cx,gy,R,Math.PI,2*Math.PI); ctx.stroke();
+  if(pct>0){ ctx.strokeStyle=sc; ctx.beginPath(); ctx.arc(cx,gy,R,Math.PI,Math.PI+Math.PI*pct/100); ctx.stroke(); }
+  ctx.lineCap='butt'; ctx.textAlign='center';
+  ctx.fillStyle='#1c1f26'; ctx.font='800 42px Segoe UI, Arial'; ctx.fillText(fmt(d.active),cx,gy-6);
+  ctx.fillStyle='#6a7280'; ctx.font='700 11px Segoe UI, Arial'; ctx.fillText('ACTIVE STARS',cx,gy+14);
+  // target line
+  let ty=gy+40; const t1='Target ', t2=fmt(d.target), t3=missing>0?'-'+fmt(missing)+' missing':'Target exceeded';
+  ctx.font='400 14px Segoe UI, Arial'; const w1=ctx.measureText(t1).width; ctx.font='700 16px Segoe UI, Arial'; const w2=ctx.measureText(t2).width; ctx.font='700 14px Segoe UI, Arial'; const w3=ctx.measureText(t3).width;
+  let sx=cx-(w1+w2+10+w3)/2; ctx.textAlign='left';
+  ctx.font='400 14px Segoe UI, Arial'; ctx.fillStyle='#6a7280'; ctx.fillText(t1,sx,ty);
+  ctx.font='700 16px Segoe UI, Arial'; ctx.fillStyle='#1c1f26'; ctx.fillText(t2,sx+w1,ty);
+  ctx.font='700 14px Segoe UI, Arial'; ctx.fillStyle=missing>0?'#d1394a':'#1a9c6b'; ctx.fillText(t3,sx+w1+w2+10,ty);
+  // OFD / Star strip (labelled)
+  const oy=ty+14, oh=38; ctx.fillStyle=oc.bg; roundRect(ctx,px,oy,iw,oh,12); ctx.fill();
+  ctx.fillStyle=oc.fg; ctx.font='700 14px Segoe UI, Arial'; ctx.fillText('OFD / Star',px+14,oy+25);
+  ctx.textAlign='right'; ctx.font='800 22px Segoe UI, Arial'; ctx.fillText(fmt(d.ofdPerStar),px+iw-14,oy+27); ctx.textAlign='left';
+  // 3 stats
+  const sy=oy+oh+16; ctx.strokeStyle='#cdd1d8'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(px,sy); ctx.lineTo(px+iw,sy); ctx.stroke();
+  const cw=iw/3; [[fmt(d.stars),'Total stars'],[fmt(d.ofd),'OFD'],[fmt(d.absence),'Abs \u2022 '+d.absencePct]].forEach((m,i)=>{
+    const mx=px+cw*i+cw/2; ctx.textAlign='center';
+    ctx.fillStyle='#1c1f26'; ctx.font='700 17px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m[0],cw-8),mx,sy+27);
+    ctx.fillStyle='#6a7280'; ctx.font='400 11px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m[1],cw-6),mx,sy+44);
+    if(i>0){ ctx.strokeStyle='#cdd1d8'; ctx.beginPath(); ctx.moveTo(px+cw*i,sy+12); ctx.lineTo(px+cw*i,sy+46); ctx.stroke(); } });
+  ctx.textAlign='left';
 }
 const PER_IMAGE=28;   // cards per downloaded image (4 rows x 7)
 async function buildImageBlob(part,parts){
   part=part||0; parts=parts||1;
-  const cols=7, cardW=280, cardH=304, gap=18, pad=32;
+  const cols=7, cardW=280, cardH=348, gap=18, pad=32;
   const all=currentSorted.length?currentSorted:D;
   const list=parts>1 ? (part===0 ? all.slice(0,PER_IMAGE) : all.slice(PER_IMAGE)) : all;   // image 1 = first 28 cards, image 2 = all the rest
   const first=part===0, headerH=first?206:84, rows=Math.ceil(list.length/cols);
