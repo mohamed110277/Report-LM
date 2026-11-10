@@ -659,6 +659,7 @@ function pgHubs(){
   const overall=TOTALS.target?Math.round(TOTALS.stars/TOTALS.target*1000)/10:0;
   setSubtitle(`${D.length} hubs • Overall achievement ${overall}% • ${stamp()}`);
   return `<div class="kpis hubkpis">${kpis.map(k=>`<div class="kpi" style="--c:${k.c}"><div class="label">${esc(k.label)}</div><div class="val">${esc(k.val)}</div></div>`).join('')}</div>
+  <div style="text-align:center;color:var(--red);font-weight:800;font-size:22px;margin:4px 0 14px">Highest 30 Hubs in OFD/Star</div>
   <div class="sortbar"><span class="sl">Sort hubs by:</span>
     <button class="sortbtn${sortMode==='ofd'?' active':''}" data-sort="ofd">Highest OFD/Star</button>
     <button class="sortbtn${sortMode==='missing'?' active':''}" data-sort="missing">Highest Missing</button></div>
@@ -1211,7 +1212,7 @@ function drawCard(ctx,d,x,y,w,h){
   const cw=iw/3; [[fmt(d.stars),'Total stars'],[fmt(d.ofd),'OFD'],[fmt(d.absence),'Abs \u2022 '+d.absencePct]].forEach((m,i)=>{
     const mx=px+cw*i+cw/2; ctx.textAlign='center';
     ctx.fillStyle='#1c1f26'; ctx.font='700 21px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m[0],cw-6),mx,sy+31);
-    ctx.fillStyle='#6a7280'; ctx.font='400 13px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m[1],cw-2),mx,sy+51);
+    ctx.fillStyle='#1a9c6b'; ctx.font='800 15px Segoe UI, Arial'; ctx.fillText(fitText(ctx,m[1],cw-2),mx,sy+52);
     if(i>0){ ctx.strokeStyle='#cdd1d8'; ctx.beginPath(); ctx.moveTo(px+cw*i,sy+12); ctx.lineTo(px+cw*i,sy+54); ctx.stroke(); } });
   ctx.textAlign='left';
 }
@@ -1221,7 +1222,7 @@ async function buildImageBlob(part,parts){
   const cols=7, cardW=280, cardH=372, gap=14, pad=22;
   const all=currentSorted.length?currentSorted:D;
   const list=parts>1 ? (part===0 ? all.slice(0,PER_IMAGE) : all.slice(PER_IMAGE)) : all;   // image 1 = first 28 cards, image 2 = all the rest
-  const first=part===0, headerH=first?236:100, rows=Math.ceil(list.length/cols);
+  const first=part===0, headerH=first?286:100, rows=Math.ceil(list.length/cols);
   const width=pad*2+cols*cardW+(cols-1)*gap, height=headerH+pad+rows*(cardH+gap);
   // as sharp as the browser allows: up to 4x, but never past the canvas limits (16k px per side, ~200M pixels)
   let scale=4; while(scale>1 && (width*scale>15000 || height*scale>15000 || width*scale*height*scale>2e8)) scale-=0.25;
@@ -1233,12 +1234,13 @@ async function buildImageBlob(part,parts){
   ctx.fillStyle='#68707d'; ctx.font='400 17px Segoe UI, Arial';
   const from=part===0?1:PER_IMAGE+1; ctx.fillText(parts>1 ? 'Hubs '+from+'\u2013'+(from+list.length-1)+' of '+all.length+'  \u2022  '+document.getElementById('subtitle').textContent : document.getElementById('subtitle').textContent,pad,72);
   if(first){
-    const kW=(width-pad*2-(kpis.length-1)*10)/kpis.length, kpiH=118;
+    const kW=(width-pad*2-(kpis.length-1)*10)/kpis.length, kpiH=118, y0TH=92+118+46;
     kpis.forEach((k,i)=>{ const x=pad+i*(kW+10), y=92;
       ctx.fillStyle='#eceef1'; roundRect(ctx,x,y,kW,kpiH,10); ctx.fill(); ctx.strokeStyle='#cdd1d8'; roundRect(ctx,x,y,kW,kpiH,10); ctx.stroke();
       ctx.fillStyle=k.c; ctx.fillRect(x,y,5,kpiH); ctx.textAlign='left';
       ctx.fillStyle='#1a9c6b'; let fs=23; ctx.font='800 '+fs+'px Segoe UI, Arial'; while(fs>11&&ctx.measureText(k.label).width>kW-24){ fs--; ctx.font='800 '+fs+'px Segoe UI, Arial'; } ctx.fillText(k.label,x+16,y+40);
       ctx.fillStyle='#1c1f26'; ctx.font='700 40px Segoe UI, Arial'; ctx.fillText(k.val,x+16,y+92); });
+    ctx.textAlign='center'; ctx.fillStyle='#d1394a'; ctx.font='800 30px Segoe UI, Arial'; ctx.fillText('Highest 30 Hubs in OFD/Star',width/2,y0TH); ctx.textAlign='left';
   }
   list.forEach((d,i)=>{ drawCard(ctx,d,pad+(i%cols)*(cardW+gap),headerH+Math.floor(i/cols)*(cardH+gap),cardW,cardH); });
   return await new Promise(res=>canvas.toBlob(res,'image/png'));
