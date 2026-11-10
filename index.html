@@ -849,7 +849,7 @@ function pgDays(m){
     ${kpi('Total Bosta',fmt(tb.v),labels[tb.i],'var(--blue)')}
     ${kpi('OFD / Star',fmt(os.v),labels[os.i]+' • avg '+avgOs.toFixed(1),'var(--red)')}
     ${kpi('Best OFD/Star',fmt(osp.v),labels[osp.i],'var(--orange)')}</div>
-  <div class="panel" style="margin-bottom:16px"><h2>OFD, Total Bosta and OFD/Star</h2><p class="cap">Daily trend with every day's number. Each line has its own scale.</p>
+  <div class="panel" id="ofdPanel" style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap"><h2>OFD, Total Bosta and OFD/Star</h2><button class="dlbtn" id="ofdDl" data-html2canvas-ignore="true">⬇ Download chart</button></div><p class="cap">Daily trend with every day's number. Each line has its own scale.</p>
     ${chart('lanes',{labels,series:[{name:'OFD',color:'var(--green)',values:m.ofd},{name:'Total Bosta',color:'var(--blue)',values:m.bosta},{name:'OFD/Star',color:'var(--red)',values:m.ofdStar}],title:'OFD, Total Bosta and OFD/Star'})}</div>
   ${insights([
     `Latest OFD/Star is <b>${fmt(os.v)}</b> (${labels[os.i]}); the 15-day peak was <b>${fmt(osp.v)}</b> on ${labels[osp.i]}.`,
@@ -889,7 +889,7 @@ function pgTarget(m){
   const st=m.sheetTotal, mism=st&&(st.target!==T);
   return `<div class="kpis">
     ${kpi('Target',fmt(T),hubs.length+' hubs','var(--blue)')}
-    ${kpi('Achieved',fmt(A),pct.toFixed(1)+'% of target','var(--green)')}
+    ${(()=>{ const AS=(TOTALS&&fin(TOTALS.active))?TOTALS.active:A; return kpi('Active Star',fmt(AS),(AS/T*100).toFixed(1)+'% of target','var(--green)'); })()}
     ${kpi('Missing',fmt(M),(M/T*100).toFixed(1)+'% of target','var(--red)')}
     ${kpi('Avg gap / hub',(M/Math.max(1,hubs.filter(h=>h.missing>0).length)).toFixed(1),'stars per hub below target','var(--orange)')}</div>
   ${mism?`<div class="panel" style="margin-bottom:16px;border-color:var(--orange)"><p class="cap" style="margin:0"><b style="color:var(--orange)">Data note:</b> the sheet\u2019s Total row shows target ${fmt(st.target)}, but the ${hubs.length} hubs listed add up to ${fmt(T)}. This page uses the hub rows.</p></div>`:''}
@@ -1247,23 +1247,25 @@ async function saveBlob(blob,filename){
   try{ if(typeof claude!=='undefined'&&claude.use){ const downloads=await claude.use('downloads'); if(downloads){ await downloads.save({filename,data:blob}); return; } } }catch(e){}
   const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),8000);
 }
-async function downloadPageImage(btn,original){
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#ofdDl'); if(b) downloadPageImage(b,b.textContent,document.getElementById('ofdPanel'),'ofd-total-bosta-ofd-star'); });
+async function downloadPageImage(btn,original,target,fname){
   if(typeof html2canvas==='undefined'){ alert('Image library did not load. Check your connection and try again.'); return; }
   btn.disabled=true; btn.textContent='Preparing...';
   try{
     hideTip();
-    const el=document.querySelector('.main');
+    const el=target||document.querySelector('.main');
     const bg=getComputedStyle(document.body).backgroundColor;
     window.scrollTo(0,0);
+    const svgSel=target?'#'+target.id+' svg':'.main svg';
     const sizes=[...el.querySelectorAll('svg')].map(x=>{ const r=x.getBoundingClientRect(); return {width:r.width,height:r.height}; });
     const W=el.offsetWidth, H=el.scrollHeight;
     let EXPS=4; while(EXPS>1 && (W*EXPS>14000||H*EXPS>14000||W*H*EXPS*EXPS>1.5e8)) EXPS-=0.5;   // sharpest the browser allows
     const canvas=await html2canvas(el,{scale:EXPS,backgroundColor:bg,useCORS:true,logging:false,width:W,height:H,windowWidth:document.documentElement.clientWidth,windowHeight:H+200,scrollX:0,scrollY:0,
-      onclone:(doc)=>{ doc.querySelectorAll('.main svg').forEach((sv,i)=>{ const r=sizes[i]; if(r&&r.width){ sv.setAttribute('width',Math.round(r.width)); sv.setAttribute('height',Math.round(r.height)); sv.style.width=Math.round(r.width)+'px'; sv.style.height=Math.round(r.height)+'px'; } }); }});
+      onclone:(doc)=>{ doc.querySelectorAll(svgSel).forEach((sv,i)=>{ const r=sizes[i]; if(r&&r.width){ sv.setAttribute('width',Math.round(r.width)); sv.setAttribute('height',Math.round(r.height)); sv.style.width=Math.round(r.width)+'px'; sv.style.height=Math.round(r.height)+'px'; } }); }});
     const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
     if(!blob) throw new Error('image too large');
     const name=(document.getElementById('pageTitle').textContent||'dashboard').trim().replace(/[^\w\u0600-\u06FF]+/g,'-').replace(/^-|-$/g,'').toLowerCase();
-    await saveBlob(blob,name+'.png');
+    await saveBlob(blob,(fname||name)+'.png');
   }catch(e){ console.error(e); alert('Could not generate the image. Please try again.'); }
   finally{ btn.disabled=false; btn.textContent=original; }
 }
