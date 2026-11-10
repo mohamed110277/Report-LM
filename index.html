@@ -1229,7 +1229,7 @@ async function buildImageBlob(part,parts){
   const ctx=canvas.getContext('2d'); ctx.scale(scale,scale);
   ctx.fillStyle='#dcdfe4'; ctx.fillRect(0,0,width,height);
   ctx.fillStyle='#1c1f26'; ctx.font='800 32px Segoe UI, Arial'; ctx.textAlign='left';
-  ctx.fillText('Fleet (ACQ)-LM'+(parts>1?'  \u2022  Part '+(part+1)+' of '+parts:''),pad,44);
+  ctx.fillText('Fleet (ACQ)-LM',pad,44);
   ctx.fillStyle='#68707d'; ctx.font='400 17px Segoe UI, Arial';
   const from=part===0?1:PER_IMAGE+1; ctx.fillText(parts>1 ? 'Hubs '+from+'\u2013'+(from+list.length-1)+' of '+all.length+'  \u2022  '+document.getElementById('subtitle').textContent : document.getElementById('subtitle').textContent,pad,72);
   if(first){
@@ -1237,7 +1237,7 @@ async function buildImageBlob(part,parts){
     kpis.forEach((k,i)=>{ const x=pad+i*(kW+10), y=92;
       ctx.fillStyle='#eceef1'; roundRect(ctx,x,y,kW,kpiH,10); ctx.fill(); ctx.strokeStyle='#cdd1d8'; roundRect(ctx,x,y,kW,kpiH,10); ctx.stroke();
       ctx.fillStyle=k.c; ctx.fillRect(x,y,5,kpiH); ctx.textAlign='left';
-      ctx.fillStyle='#1a9c6b'; ctx.font='800 23px Segoe UI, Arial'; ctx.fillText(fitText(ctx,k.label,kW-24),x+16,y+40);
+      ctx.fillStyle='#1a9c6b'; let fs=23; ctx.font='800 '+fs+'px Segoe UI, Arial'; while(fs>11&&ctx.measureText(k.label).width>kW-24){ fs--; ctx.font='800 '+fs+'px Segoe UI, Arial'; } ctx.fillText(k.label,x+16,y+40);
       ctx.fillStyle='#1c1f26'; ctx.font='700 40px Segoe UI, Arial'; ctx.fillText(k.val,x+16,y+92); });
   }
   list.forEach((d,i)=>{ drawCard(ctx,d,pad+(i%cols)*(cardW+gap),headerH+Math.floor(i/cols)*(cardH+gap),cardW,cardH); });
