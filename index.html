@@ -419,18 +419,18 @@ function drawLine(el,c){
   let ticks=niceTicks(lo,hi); lo=ticks[0]; hi=ticks[ticks.length-1];
   if(c.multi){ ticks=[0,25,50,75,100]; lo=0; hi=100; }
   const f=c.fmt||fmt;
-  m.l=c.multi?14:Math.max(48,14+6.4*Math.max(...ticks.map(t=>f(t).length)));
+  m.l=c.multi?14:Math.max(54,16+7.6*Math.max(...ticks.map(t=>f(t).length)));
   if(c.multi){ m.t=34; m.r=14; }
   const iw=W-m.l-m.r, ih=H-m.t-m.b;
   const X=i=>m.l+(n<2?iw/2:i*iw/(n-1)), Y=v=>m.t+ih-(v-lo)/((hi-lo)||1)*ih;
   let g='';
-  ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/>${c.multi?'':`<text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="var(--sub)">${esc(f(t))}</text>`}`; });
-  (c.allLabels?labelsEvery(n,iw):xlabelIdx(n,iw)).forEach(i=>{ g+=`<text x="${X(i)}" y="${H-9}" text-anchor="middle" font-size="11" fill="var(--sub)">${esc(c.labels[i])}</text>`; });
+  ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/>${c.multi?'':`<text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="13" font-weight="600" fill="var(--ink)" fill-opacity=".8">${esc(f(t))}</text>`}`; });
+  (c.allLabels?labelsEvery(n,iw):xlabelIdx(n,iw)).forEach(i=>{ g+=`<text x="${X(i)}" y="${H-9}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" fill-opacity=".8">${esc(c.labels[i])}</text>`; });
   c.series.forEach(s=>{
     let d='',open=false;
     s.values.forEach((v,i)=>{ if(fin(v)){ d+=(open?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1); open=true; } else open=false; });
-    g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"${s.dashed?' stroke-dasharray="6 5"':''}/>`;
-    if(!s.dashed && n<=24) s.values.forEach((v,i)=>{ if(fin(v)) g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="${s.color}" stroke="var(--card)" stroke-width="1.5"/>`; });
+    g+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"${s.dashed?' stroke-dasharray="6 5"':''}/>`;
+    if(!s.dashed && n<=24) s.values.forEach((v,i)=>{ if(fin(v)) g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="4.8" fill="${s.color}" stroke="var(--card)" stroke-width="2"/>`; });
   });
   if(c.multi){
     const L=[]; c.series.forEach(s=>{ let l=-1; s.values.forEach((v,i)=>{ if(fin(v)) l=i; }); if(l>=0) L.push({s,l,y:Y(s.values[l])-10}); });
@@ -440,11 +440,11 @@ function drawLine(el,c){
   }
   const ls=c.series.find(s=>!s.dashed)||c.series[0]; let li=-1; ls.values.forEach((v,i)=>{ if(fin(v)) li=i; });
   if(c.allLabels){
-    const sm=iw/Math.max(1,n-1)<46, fs=sm?10:12;
+    const sm=iw/Math.max(1,n-1)<46, fs=sm?12:15;
     ls.values.forEach((v,i)=>{ if(!fin(v)) return; const txt=f(v);
-      g+=`<text x="${X(i)}" y="${Y(v)-10}" text-anchor="${i===0&&n>1?'start':(i===n-1&&n>1?'end':'middle')}" font-size="${fs}" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(txt)}</text>`; });
+      g+=`<text x="${X(i)}" y="${Y(v)-12}" text-anchor="${i===0&&n>1?'start':(i===n-1&&n>1?'end':'middle')}" font-size="${fs}" font-weight="800" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(txt)}</text>`; });
   }
-  else if(!c.multi && li>=0 && c.endLabel!==false){ g+=`<text x="${Math.min(X(li),W-m.r)}" y="${Y(ls.values[li])-12}" text-anchor="${li>n-3?'end':'middle'}" font-size="12" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(ls.values[li]))}</text>`; }
+  else if(!c.multi && li>=0 && c.endLabel!==false){ g+=`<text x="${Math.min(X(li),W-m.r)}" y="${Y(ls.values[li])-12}" text-anchor="${li>n-3?'end':'middle'}" font-size="15" font-weight="800" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(ls.values[li]))}</text>`; }
   g+=`<line class="cx" x1="0" x2="0" y1="${m.t}" y2="${m.t+ih}" stroke="var(--sub)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>`;
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(c.title||'chart')}">${g}<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/></svg>`;
   const svg=el.querySelector('svg'), cx=svg.querySelector('.cx');
@@ -483,7 +483,7 @@ function drawLanes(el,c){
       g+=`<text x="${X(i)}" y="${Y(x)-9}" text-anchor="${i===0&&n>1?'start':(i===n-1&&n>1?'end':'middle')}" font-size="${fs}" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(x))}</text>`; });
   });
   const every=iw/Math.max(1,n-1)>=34?1:Math.ceil(34/(iw/Math.max(1,n-1)));
-  for(let i=0;i<n;i+=every) g+=`<text x="${X(i)}" y="${H-9}" text-anchor="${i===0?'start':'middle'}" font-size="11" fill="var(--sub)">${esc(c.labels[i])}</text>`;
+  for(let i=0;i<n;i+=every) g+=`<text x="${X(i)}" y="${H-9}" text-anchor="${i===0?'start':'middle'}" font-size="13" font-weight="600" fill="var(--ink)" fill-opacity=".8">${esc(c.labels[i])}</text>`;
   g+=`<line class="cx" x1="0" x2="0" y1="${m.t}" y2="${H-m.b}" stroke="var(--sub)" stroke-width="1" stroke-dasharray="3 3" visibility="hidden"/>`;
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(c.title||'chart')}">${g}<rect x="${m.l}" y="${m.t}" width="${iw}" height="${H-m.t-m.b}" fill="transparent"/></svg>`;
   const svg=el.querySelector('svg'), cx=svg.querySelector('.cx');
@@ -507,7 +507,7 @@ function drawGaps(el,c){
   list.forEach((h,i)=>{ const r=h.missing/mx, hue=Math.round(40-r*44);
     g+=`<linearGradient id="gg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${hue-6},80%,48%)"/><stop offset="1" stop-color="hsl(${hue+8},88%,62%)"/></linearGradient>`; });
   g+='</defs>';
-  ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/><text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="var(--sub)">${t}</text>`; });
+  ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="1"/><text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="13" font-weight="600" fill="var(--ink)" fill-opacity=".8">${t}</text>`; });
   list.forEach((h,i)=>{
     const cx=m.l+band*i+band/2, x=cx-bw/2, y=Y(h.missing), bh=Math.max(3,m.t+ih-y);
     const active=h.target-h.missing, ach=h.target?Math.round(active/h.target*100):0;
@@ -534,15 +534,15 @@ function drawBars(el,c){
   const iw=W-m.l-m.r, ih=H-m.t-m.b;
   const Y=v=>m.t+ih-(v-lo)/((hi-lo)||1)*ih, band=iw/n, bw=Math.min(band*0.64,36);
   let g='';
-  ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t===0?'var(--sub)':'var(--grid)'}" stroke-width="1"/><text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="11" fill="var(--sub)">${esc(f(t))}</text>`; });
+  ticks.forEach(t=>{ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t===0?'var(--sub)':'var(--grid)'}" stroke-width="1"/><text x="${m.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="13" font-weight="600" fill="var(--ink)" fill-opacity=".8">${esc(f(t))}</text>`; });
   const labIdx=new Set(xlabelIdx(n,iw,Math.max(40,band)).map(i=>i));
   c.values.forEach((v,i)=>{
     const x=m.l+band*i+(band-bw)/2;
-    if(labIdx.has(i)||n<=16) g+=`<text x="${x+bw/2}" y="${H-9}" text-anchor="middle" font-size="11" fill="var(--sub)">${esc(c.labels[i])}</text>`;
+    if(labIdx.has(i)||n<=16) g+=`<text x="${x+bw/2}" y="${H-9}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)" fill-opacity=".8">${esc(c.labels[i])}</text>`;
     if(!fin(v)) return;
     const col=c.colorFn?c.colorFn(v,i):c.color, y0=Y(0), y1=Y(v), top=Math.min(y0,y1), h=Math.max(2,Math.abs(y0-y1));
     g+=`<rect x="${x}" y="${top}" width="${bw}" height="${h}" rx="3" fill="${col}" data-tip="<b>${esc(c.labels[i])}</b><br>${esc(c.name||'Value')}: <b>${esc(f(v))}</b>"/>`;
-    if(band>=18) g+=`<text x="${x+bw/2}" y="${(v>=0?top-5:top+h+13)}" text-anchor="middle" font-size="${band>=38?11:(band>=26?10:9)}" font-weight="700" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(v))}</text>`;   // value on every bar, above positive and below negative
+    if(band>=18) g+=`<text x="${x+bw/2}" y="${(v>=0?top-5:top+h+13)}" text-anchor="middle" font-size="${band>=38?14:(band>=26?12:11)}" font-weight="800" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">${esc(f(v))}</text>`;   // value on every bar, above positive and below negative
   });
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(c.title||'chart')}">${g}</svg>`;
 }
@@ -1257,7 +1257,8 @@ async function downloadPageImage(btn,original){
     window.scrollTo(0,0);
     const sizes=[...el.querySelectorAll('svg')].map(x=>{ const r=x.getBoundingClientRect(); return {width:r.width,height:r.height}; });
     const W=el.offsetWidth, H=el.scrollHeight;
-    const canvas=await html2canvas(el,{scale:2,backgroundColor:bg,useCORS:true,logging:false,width:W,height:H,windowWidth:document.documentElement.clientWidth,windowHeight:H+200,scrollX:0,scrollY:0,
+    let EXPS=4; while(EXPS>1 && (W*EXPS>14000||H*EXPS>14000||W*H*EXPS*EXPS>1.5e8)) EXPS-=0.5;   // sharpest the browser allows
+    const canvas=await html2canvas(el,{scale:EXPS,backgroundColor:bg,useCORS:true,logging:false,width:W,height:H,windowWidth:document.documentElement.clientWidth,windowHeight:H+200,scrollX:0,scrollY:0,
       onclone:(doc)=>{ doc.querySelectorAll('.main svg').forEach((sv,i)=>{ const r=sizes[i]; if(r&&r.width){ sv.setAttribute('width',Math.round(r.width)); sv.setAttribute('height',Math.round(r.height)); sv.style.width=Math.round(r.width)+'px'; sv.style.height=Math.round(r.height)+'px'; } }); }});
     const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
     if(!blob) throw new Error('image too large');
