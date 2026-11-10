@@ -1254,7 +1254,11 @@ async function downloadPageImage(btn,original){
     hideTip();
     const el=document.querySelector('.main');
     const bg=getComputedStyle(document.body).backgroundColor;
-    const canvas=await html2canvas(el,{scale:2,backgroundColor:bg,useCORS:true,logging:false,windowWidth:Math.max(el.scrollWidth+60,1200)});
+    window.scrollTo(0,0);
+    const sizes=[...el.querySelectorAll('svg')].map(x=>{ const r=x.getBoundingClientRect(); return {width:r.width,height:r.height}; });
+    const W=el.offsetWidth, H=el.scrollHeight;
+    const canvas=await html2canvas(el,{scale:2,backgroundColor:bg,useCORS:true,logging:false,width:W,height:H,windowWidth:document.documentElement.clientWidth,windowHeight:H+200,scrollX:0,scrollY:0,
+      onclone:(doc)=>{ doc.querySelectorAll('.main svg').forEach((sv,i)=>{ const r=sizes[i]; if(r&&r.width){ sv.setAttribute('width',Math.round(r.width)); sv.setAttribute('height',Math.round(r.height)); sv.style.width=Math.round(r.width)+'px'; sv.style.height=Math.round(r.height)+'px'; } }); }});
     const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
     if(!blob) throw new Error('image too large');
     const name=(document.getElementById('pageTitle').textContent||'dashboard').trim().replace(/[^\w\u0600-\u06FF]+/g,'-').replace(/^-|-$/g,'').toLowerCase();
